@@ -2,8 +2,6 @@
 
 namespace Aphreton;
 
-require_once("./aphreton/APIResponse.php");
-
 class API {
 	
 	private $response;
