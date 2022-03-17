@@ -29,15 +29,18 @@ class APIRequest implements \JsonSerializable {
 	
 	public function validate() {		
 		if (!$this->post_data) {
-			throw new \Exception('Request is empty');
+			trigger_error("Request is empty", E_USER_ERROR);
 		}
-		$this->json_validator->validate($this->post_data, $this->schema, \JsonSchema\Constraints\Constraint::CHECK_MODE_NORMAL);
+		$this->json_validator->validates($this->post_data, $this->schema, \JsonSchema\Constraints\Constraint::CHECK_MODE_NORMAL);
 		if (!$this->json_validator->isValid()) {
 			$errstr = "";
+			$number_of_errors = count($this->json_validator->getErrors());
+			$i = 0;
 			foreach ($this->json_validator->getErrors() as $error) {
-				$errstr .= $error['property'] . ": " . $error['message'] . "; ";
+				$errstr .= ($error['property'] ? "[{$error['property']}] " : "") . "{$error['message']}";
+				$errstr .= ((++$i < $number_of_errors) ? "; " : "");
 			}
-			throw new \Exception($errstr);
+			trigger_error("Request validation error. {$errstr}", E_USER_ERROR);
 		}
 	}
 	
