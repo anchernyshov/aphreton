@@ -9,9 +9,9 @@ class API {
 	
 	public function __construct() {
 		error_reporting( E_ALL );
-		ini_set("display_errors", 0);
-		set_error_handler([$this, "errorHandler"], E_ALL);
-		register_shutdown_function([$this, "errorShutdown"]);
+		ini_set('display_errors', 0);
+		set_error_handler([$this, 'errorHandler'], E_ALL);
+		register_shutdown_function([$this, 'errorShutdown']);
 		
 		$this->request = new \Aphreton\APIRequest(file_get_contents('php://input'));
 		$this->response = new \Aphreton\APIResponse();
@@ -50,7 +50,7 @@ class API {
 			case E_CORE_WARNING:
 			case E_COMPILE_WARNING:
 			case E_PARSE:
-				$this->response->setError("API Error");
+				$this->response->setError('API Error');
 				break;
 			case E_USER_ERROR:
 				$this->response->setError($error);
@@ -60,6 +60,6 @@ class API {
 	}
 	
 	public function setErrorReportPolicy(bool $flag) {
-		ini_set("display_errors", (int)$flag);
+		ini_set('display_errors', (int)$flag);
 	}
 }

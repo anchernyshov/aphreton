@@ -7,19 +7,19 @@ class APIRequest implements \JsonSerializable {
 	private $post_data;
 	private $json_validator;
 	private $schema = [
-		"type" => "object",
-		"properties" => [
-			"method" => [
-				"type" => "string"
+		'type' => 'object',
+		'properties' => [
+			'route' => [
+				'type' => 'string'
 			],
-			"action" => [
-				"type" => "string"
+			'endpoint' => [
+				'type' => 'string'
 			],
-			"data" => [
-				"type" => "object"
+			'data' => [
+				'type' => 'object'
 			]
 		],
-		"required" => ["method", "action"]
+		'required' => ['route', 'endpoint']
 	];
 	
 	public function __construct($input) {
@@ -29,19 +29,23 @@ class APIRequest implements \JsonSerializable {
 	
 	public function validate() {		
 		if (!$this->post_data) {
-			trigger_error("Request is empty", E_USER_ERROR);
+			trigger_error('Request is empty', E_USER_ERROR);
 		}
-		$this->json_validator->validates($this->post_data, $this->schema, \JsonSchema\Constraints\Constraint::CHECK_MODE_NORMAL);
+		$this->json_validator->validate($this->post_data, $this->schema, \JsonSchema\Constraints\Constraint::CHECK_MODE_NORMAL);
 		if (!$this->json_validator->isValid()) {
-			$errstr = "";
+			$errstr = '';
 			$number_of_errors = count($this->json_validator->getErrors());
 			$i = 0;
 			foreach ($this->json_validator->getErrors() as $error) {
-				$errstr .= ($error['property'] ? "[{$error['property']}] " : "") . "{$error['message']}";
-				$errstr .= ((++$i < $number_of_errors) ? "; " : "");
+				$errstr .= ($error['property'] ? "[{$error['property']}] " : '') . $error['message'];
+				$errstr .= ((++$i < $number_of_errors) ? '; ' : '');
 			}
 			trigger_error("Request validation error. {$errstr}", E_USER_ERROR);
 		}
+	}
+	
+	public function getParsedData() {
+		return $this->post_data;
 	}
 	
 	public function jsonSerialize() {
