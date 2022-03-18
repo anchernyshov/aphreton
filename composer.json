@@ -14,7 +14,8 @@
     },
 	"autoload": {
         "psr-4": {
-            "Aphreton\\": "src/"
+            "Aphreton\\": "src/",
+			"Aphreton\\Routes\\": "routes/"
         }
     }
 }

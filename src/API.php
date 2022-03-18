@@ -19,7 +19,39 @@ class API {
 	
 	public function run() {
 		$this->request->validate();
+		
+		$input_data = $this->request->getParsedData();
+		$route = $input_data->route;
+		$endpoint = $input_data->endpoint;
+		$params = property_exists($input_data, 'params') ? $input_data->params : null;
+		
+		$this->response->setRoute($route);
+		$this->response->setEndpoint($endpoint);
+		
+		$this->process($route, $endpoint, $params);
 		$this->out();
+	}
+	
+	public function process($route, $endpoint, $params) {
+		$class = null;
+		$class_str = 'Aphreton\\Routes\\' . $route;
+		if (class_exists($class_str)) {
+			$class = new $class_str($this);
+		} else {
+			trigger_error("API route {$route} not exists", E_USER_ERROR);
+		}
+		
+		if ($class && method_exists($class, $endpoint)) {
+			//TODO: Access control
+			//TODO: Params validation
+			try {
+				$this->response->setData($class->{$endpoint}($params));
+			} catch (\Exception $e) {
+				trigger_error("API route {$route} endpoint {$endpoint} error: {$e->getMessage()}", E_USER_ERROR);
+			}
+		} else {
+			trigger_error("Route {$route} endpoint {$endpoint} not exists", E_USER_ERROR);
+		}
 	}
 	
 	public function out() {

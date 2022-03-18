@@ -15,7 +15,7 @@ class APIRequest implements \JsonSerializable {
 			'endpoint' => [
 				'type' => 'string'
 			],
-			'data' => [
+			'params' => [
 				'type' => 'object'
 			]
 		],
