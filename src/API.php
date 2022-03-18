@@ -35,7 +35,14 @@ class API {
 	}
 	
 	public function validateInput() {
+		if(!isset($_SERVER['REQUEST_METHOD']) || strcasecmp($_SERVER['REQUEST_METHOD'], 'POST') != 0){
+			trigger_error('API requests are required to use POST method', E_USER_ERROR);
+		}
+		if (!isset($_SERVER['CONTENT_TYPE']) || strcasecmp($_SERVER['CONTENT_TYPE'], 'application/json')) {
+			trigger_error('API requests are required to use Content-Type: application/json header', E_USER_ERROR);
+		}
 		$input = file_get_contents('php://input');
+		filter_var($input, FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
 		if (!$input) {
 			trigger_error('Request is empty', E_USER_ERROR);
 		}
