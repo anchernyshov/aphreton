@@ -2,10 +2,9 @@
 
 namespace Aphreton;
 
-class APIRequest implements \JsonSerializable {
+class APIRequest {
 	
-	private $post_data;
-	private $json_validator;
+	private $data;
 	private $schema = [
 		'type' => 'object',
 		'properties' => [
@@ -22,39 +21,15 @@ class APIRequest implements \JsonSerializable {
 		'required' => ['route', 'endpoint']
 	];
 	
-	public function __construct($input) {
-		$this->json_validator = new \JsonSchema\Validator();
-		$this->post_data = json_decode($input);
+	public function setData($data) {
+		$this->data = $data;
 	}
 	
-	public function validate() {		
-		if (!$this->post_data) {
-			trigger_error('Request is empty', E_USER_ERROR);
-		}
-		$this->json_validator->validate($this->post_data, $this->schema, \JsonSchema\Constraints\Constraint::CHECK_MODE_NORMAL);
-		if (!$this->json_validator->isValid()) {
-			$errstr = '';
-			$number_of_errors = count($this->json_validator->getErrors());
-			$i = 0;
-			foreach ($this->json_validator->getErrors() as $error) {
-				$errstr .= ($error['property'] ? "[{$error['property']}] " : '') . $error['message'];
-				$errstr .= ((++$i < $number_of_errors) ? '; ' : '');
-			}
-			trigger_error("Request validation error. {$errstr}", E_USER_ERROR);
-		}
+	public function getData() {
+		return $this->data;
 	}
 	
-	public function getParsedData() {
-		return $this->post_data;
-	}
-	
-	public function jsonSerialize() {
-        return [
-            'params' => $this->post_data
-        ];
-    }
-	
-	public function toJSON() {
-		return json_encode($this);
+	public function getJSONSchema() {
+		return $this->schema;
 	}
 }
