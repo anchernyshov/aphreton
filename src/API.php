@@ -50,7 +50,7 @@ class API {
 		if(!isset($_SERVER['REQUEST_METHOD']) || strcasecmp($_SERVER['REQUEST_METHOD'], 'POST') != 0){
 			trigger_error('API requests are required to use POST method', E_USER_ERROR);
 		}
-		if (!isset($_SERVER['CONTENT_TYPE']) || strcasecmp($_SERVER['CONTENT_TYPE'], 'application/json')) {
+		if (!isset($_SERVER['CONTENT_TYPE']) || strcasecmp($_SERVER['CONTENT_TYPE'], 'application/json') != 0) {
 			trigger_error('API requests are required to use Content-Type: application/json header', E_USER_ERROR);
 		}
 		$input = file_get_contents('php://input');

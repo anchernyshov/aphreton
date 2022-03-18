@@ -8,13 +8,13 @@ class Test extends \Aphreton\APIRoute {
         parent::__construct($parent);
 		$this->setJSONSchemaForEndpoint(
 			'default', [
-				"type" => "object",
-				"properties" => [
-					"message" => [
-						"type" => "string"
+				'type' => 'object',
+				'properties' => [
+					'message' => [
+						'type' => 'string'
 					]
 				],
-				"required" => ["message"]
+				'required' => ['message']
 			]
 		);
     }
