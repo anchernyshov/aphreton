@@ -7,6 +7,8 @@ class API {
 	private $request;
 	private $response;
 	private $json_validator;
+	private $auth_error = false;
+	private $JWT_key = 'example-key'; //test key
 	
 	public function __construct() {
 		error_reporting( E_ALL );
@@ -30,6 +32,16 @@ class API {
 		$this->response->setRoute($route);
 		$this->response->setEndpoint($endpoint);
 		
+		$token = $this->getBearerToken();
+		if (!$token) {
+			if ( (strcasecmp($route, 'auth') != 0) || (strcasecmp($endpoint, 'login') != 0) ) {
+				$this->toggleAuthError();
+				trigger_error('No authentication token provided', E_USER_ERROR);
+			}
+		} else {
+			$this->authenticate($token);
+		}
+
 		$this->process($route, $endpoint, $params);
 		$this->out();
 	}
@@ -56,6 +68,30 @@ class API {
 		if (!empty($errors)) {
 			trigger_error("Request validation error. {$errors}", E_USER_ERROR);
 		}
+	}
+	
+	public function authenticate($token) {
+		$token_payload = (array) $this->decodeToken($token);
+	}
+	
+	public function toggleAuthError() {
+		$this->auth_error = true;
+	}
+	
+	public function decodeToken($token) {
+		try {
+			return \Firebase\JWT\JWT::decode($token, new \Firebase\JWT\Key($this->JWT_key, 'HS256'), 'HS256');
+		} catch (\Firebase\JWT\ExpiredException $e) {
+			$this->toggleAuthError();
+			trigger_error('Authentication token expired', E_USER_ERROR);
+		} catch (\Exception $e) {
+			$this->toggleAuthError();
+			trigger_error('Authentication token error', E_USER_ERROR);
+		}
+	}
+	
+	public function encodeTokenPayload($payload) {
+		return \Firebase\JWT\JWT::encode($payload, $this->JWT_key, 'HS256');
 	}
 	
 	public function process($route, $endpoint, $params) {
@@ -93,7 +129,7 @@ class API {
 	public function out() {
 		header('Content-Type: application/json');
 		if ($this->response->hasError()) {
-			http_response_code(500);
+			http_response_code( ($this->auth_error ? 401 : 500) );
 		}
 		echo $this->response->toJSON();
 		exit(1);
@@ -139,6 +175,32 @@ class API {
 				break;
 		}
 		$this->out();
+	}
+	
+	private function getAuthorizationHeader() {
+		$headers = null;
+		if (isset($_SERVER['Authorization'])) {
+			$headers = trim($_SERVER['Authorization']);
+		} else if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+			$headers = trim($_SERVER['HTTP_AUTHORIZATION']);
+		} else if (function_exists('apache_request_headers')) {
+			$requestHeaders = apache_request_headers();
+			$requestHeaders = array_combine(array_map('ucwords', array_keys($requestHeaders)), array_values($requestHeaders));
+			if (isset($requestHeaders['Authorization'])) {
+				$headers = trim($requestHeaders['Authorization']);
+			}
+		}
+		return $headers;
+	}
+
+	private function getBearerToken() {
+		$headers = $this->getAuthorizationHeader();
+		if (!empty($headers)) {
+			if (preg_match('/Bearer\s(\S+)/', $headers, $matches)) {
+				return $matches[1];
+			}
+		}
+		return null;
 	}
 	
 	public function setErrorReportPolicy(bool $flag) {
