@@ -8,13 +8,15 @@ class API {
 	private $response;
 	private $json_validator;
 	private $auth_error = false;
-	private $JWT_key = 'example-key'; //test key
+	private $config;
 	
 	public function __construct() {
 		error_reporting( E_ALL );
 		ini_set('display_errors', 0);
 		set_error_handler([$this, 'errorHandler'], E_ALL);
 		register_shutdown_function([$this, 'errorShutdown']);
+		
+		$this->config = include('config/config.php');
 		
 		$this->json_validator = new \JsonSchema\Validator();
 		$this->request = new \Aphreton\APIRequest();
@@ -80,7 +82,7 @@ class API {
 	
 	public function decodeToken($token) {
 		try {
-			return \Firebase\JWT\JWT::decode($token, new \Firebase\JWT\Key($this->JWT_key, 'HS256'), 'HS256');
+			return \Firebase\JWT\JWT::decode($token, new \Firebase\JWT\Key($this->config['jwt_key'], 'HS256'), 'HS256');
 		} catch (\Firebase\JWT\ExpiredException $e) {
 			$this->toggleAuthError();
 			trigger_error('Authentication token expired', E_USER_ERROR);
@@ -91,7 +93,7 @@ class API {
 	}
 	
 	public function encodeTokenPayload($payload) {
-		return \Firebase\JWT\JWT::encode($payload, $this->JWT_key, 'HS256');
+		return \Firebase\JWT\JWT::encode($payload, $this->config['jwt_key'], 'HS256');
 	}
 	
 	public function process($route, $endpoint, $params) {
