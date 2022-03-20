@@ -26,10 +26,12 @@ class Auth extends \Aphreton\APIRoute {
 	
 	public function login($params) {
 		$result = [];
+		$client_ip = $this->parent->getClientIPAddress();
 		//test login/pass combination
 		if (strcasecmp($params->login, 'test') == 0 && strcmp($params->password, 'qwerty') == 0) {
 			$payload = [
 				'login' => $params->login,
+				'ip' => $client_ip,
 				'exp' => microtime(true) + $this->JWT_valid_duration
 			];
 			$result['token'] = $this->parent->encodeTokenPayload($payload);

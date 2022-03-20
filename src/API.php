@@ -48,7 +48,7 @@ class API {
 		$this->out();
 	}
 	
-	public function validateInput() {
+	private function validateInput() {
 		if(!isset($_SERVER['REQUEST_METHOD']) || strcasecmp($_SERVER['REQUEST_METHOD'], 'POST') != 0){
 			trigger_error('API requests are required to use POST method', E_USER_ERROR);
 		}
@@ -72,12 +72,22 @@ class API {
 		}
 	}
 	
-	public function authenticate($token) {
+	private function authenticate($token) {
 		$token_payload = (array) $this->decodeToken($token);
+		$client_ip = $this->getClientIPAddress();
+		if (strcasecmp($token_payload['ip'], $client_ip) != 0) {
+			//Client IP address mismatch
+			$this->toggleAuthError();
+			trigger_error('Authentication token error', E_USER_ERROR);
+		}
 	}
 	
 	public function toggleAuthError() {
 		$this->auth_error = true;
+	}
+	
+	public function getClientIPAddress() {
+		return filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP);
 	}
 	
 	public function decodeToken($token) {
@@ -96,7 +106,7 @@ class API {
 		return \Firebase\JWT\JWT::encode($payload, $this->config['jwt_key'], 'HS256');
 	}
 	
-	public function process($route, $endpoint, $params) {
+	private function process($route, $endpoint, $params) {
 		$class = null;
 		$class_str = 'Aphreton\\Routes\\' . $route;
 		if (class_exists($class_str)) {
