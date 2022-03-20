@@ -7,9 +7,7 @@ class API {
 	private $request;
 	private $response;
 	private $json_validator;
-	private $auth_error = false;
 	private $config;
-	public static int $ERROR_TYPE_DEFAULT = 0;
 	public static int $ERROR_TYPE_AUTH = 1;
 	public static int $ERROR_TYPE_NOT_FOUND = 2;
 	
@@ -81,10 +79,6 @@ class API {
 			//Client IP address mismatch
 			$this->triggerError('Authentication token error', self::$ERROR_TYPE_AUTH);
 		}
-	}
-	
-	public function toggleAuthError() {
-		$this->auth_error = true;
 	}
 	
 	public function getClientIPAddress() {
