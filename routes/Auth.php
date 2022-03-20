@@ -36,8 +36,7 @@ class Auth extends \Aphreton\APIRoute {
 			];
 			$result['token'] = $this->parent->encodeTokenPayload($payload);
 		} else {
-			$this->parent->toggleAuthError();
-			throw new \Exception('Incorrect password');
+			throw new \Aphreton\AuthException('Incorrect password');
 		}
 		return $result;
 	}

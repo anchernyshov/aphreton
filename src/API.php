@@ -9,6 +9,9 @@ class API {
 	private $json_validator;
 	private $auth_error = false;
 	private $config;
+	public static int $ERROR_TYPE_DEFAULT = 0;
+	public static int $ERROR_TYPE_AUTH = 1;
+	public static int $ERROR_TYPE_NOT_FOUND = 2;
 	
 	public function __construct() {
 		error_reporting( E_ALL );
@@ -37,8 +40,7 @@ class API {
 		$token = $this->getBearerToken();
 		if (!$token) {
 			if ( (strcasecmp($route, 'auth') != 0) || (strcasecmp($endpoint, 'login') != 0) ) {
-				$this->toggleAuthError();
-				trigger_error('No authentication token provided', E_USER_ERROR);
+				$this->triggerError('No authentication token provided', self::$ERROR_TYPE_AUTH);
 			}
 		} else {
 			$this->authenticate($token);
@@ -50,25 +52,25 @@ class API {
 	
 	private function validateInput() {
 		if(!isset($_SERVER['REQUEST_METHOD']) || strcasecmp($_SERVER['REQUEST_METHOD'], 'POST') != 0){
-			trigger_error('API requests are required to use POST method', E_USER_ERROR);
+			$this->triggerError('API requests are required to use POST method');
 		}
 		if (!isset($_SERVER['CONTENT_TYPE']) || strcasecmp($_SERVER['CONTENT_TYPE'], 'application/json') != 0) {
-			trigger_error('API requests are required to use Content-Type: application/json header', E_USER_ERROR);
+			$this->triggerError('API requests are required to use Content-Type: application/json header');
 		}
 		$input = file_get_contents('php://input');
 		filter_var($input, FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
 		if (!$input) {
-			trigger_error('Request is empty', E_USER_ERROR);
+			$this->triggerError('Request is empty');
 		}
 		$input = json_decode($input);
 		if (json_last_error() !== JSON_ERROR_NONE) {
-			trigger_error('Request is not a valid JSON', E_USER_ERROR);
+			$this->triggerError('Request is not a valid JSON');
 		}
 		
 		$this->request->setData($input);
 		$errors = $this->validateJSONSchema($this->request->getData(), $this->request->getJSONSchema());
 		if (!empty($errors)) {
-			trigger_error("Request validation error. {$errors}", E_USER_ERROR);
+			$this->triggerError("Request validation error. {$errors}");
 		}
 	}
 	
@@ -77,8 +79,7 @@ class API {
 		$client_ip = $this->getClientIPAddress();
 		if (strcasecmp($token_payload['ip'], $client_ip) != 0) {
 			//Client IP address mismatch
-			$this->toggleAuthError();
-			trigger_error('Authentication token error', E_USER_ERROR);
+			$this->triggerError('Authentication token error', self::$ERROR_TYPE_AUTH);
 		}
 	}
 	
@@ -94,11 +95,9 @@ class API {
 		try {
 			return \Firebase\JWT\JWT::decode($token, new \Firebase\JWT\Key($this->config['jwt_key'], 'HS256'), 'HS256');
 		} catch (\Firebase\JWT\ExpiredException $e) {
-			$this->toggleAuthError();
-			trigger_error('Authentication token expired', E_USER_ERROR);
+			$this->triggerError('Authentication token expired', self::$ERROR_TYPE_AUTH);
 		} catch (\Exception $e) {
-			$this->toggleAuthError();
-			trigger_error('Authentication token error', E_USER_ERROR);
+			$this->triggerError('Authentication token error', self::$ERROR_TYPE_AUTH);
 		}
 	}
 	
@@ -113,10 +112,10 @@ class API {
 			if (is_subclass_of($class_str, 'Aphreton\\APIRoute')) {
 				$class = new $class_str($this);
 			} else {
-				trigger_error("API route {$route} is not valid", E_USER_ERROR);
+				$this->triggerError("API route {$route} is not valid");
 			}
 		} else {
-			trigger_error("API route {$route} not exists", E_USER_ERROR);
+			$this->triggerError("API route {$route} not exists", self::$ERROR_TYPE_NOT_FOUND);
 		}
 		
 		if ($class && method_exists($class, $endpoint)) {
@@ -125,26 +124,37 @@ class API {
 			if ($schema) {
 				$errors = $this->validateJSONSchema($params, $schema);
 				if (!empty($errors)) {
-					trigger_error("API route {$route} endpoint {$endpoint} data validation error. {$errors}", E_USER_ERROR);
+					$this->triggerError("API route {$route} endpoint {$endpoint} data validation error. {$errors}");
 				}
 			}
 			try {
 				$this->response->setData($class->{$endpoint}($params));
+			} catch (\Aphreton\AuthException $e) {
+				$this->triggerError("API route {$route} endpoint {$endpoint} error: {$e->getMessage()}", self::$ERROR_TYPE_AUTH);
 			} catch (\Exception $e) {
-				trigger_error("API route {$route} endpoint {$endpoint} error: {$e->getMessage()}", E_USER_ERROR);
+				$this->triggerError("API route {$route} endpoint {$endpoint} error: {$e->getMessage()}");
 			}
 		} else {
-			trigger_error("API route {$route} endpoint {$endpoint} not exists", E_USER_ERROR);
+			$this->triggerError("API route {$route} endpoint {$endpoint} not exists", self::$ERROR_TYPE_NOT_FOUND);
 		}
 	}
 	
 	public function out() {
 		header('Content-Type: application/json');
-		if ($this->response->hasError()) {
-			http_response_code( ($this->auth_error ? 401 : 500) );
-		}
 		echo $this->response->toJSON();
 		exit(1);
+	}
+	
+	public function triggerError(string $message, int $type = 0) {
+		$code = 500;
+		switch ($type) {
+			case self::$ERROR_TYPE_AUTH:
+				$code = 401; break;
+			case self::$ERROR_TYPE_NOT_FOUND:
+				$code = 404; break;
+		}
+		http_response_code($code);
+		trigger_error($message, E_USER_ERROR);
 	}
 	
 	public function validateJSONSchema($data, $schema) {		
@@ -219,3 +229,5 @@ class API {
 		ini_set('display_errors', (int)$flag);
 	}
 }
+
+class AuthException extends \Exception {}
