@@ -4,8 +4,6 @@ namespace Aphreton\Routes;
 
 class Auth extends \Aphreton\APIRoute {
 	
-	private $JWT_valid_duration = 1 * 1 * 60; //1 minute for testing purposes
-
 	public function __construct($parent) {
         parent::__construct($parent);
 		$this->setJSONSchemaForEndpoint(
@@ -32,7 +30,7 @@ class Auth extends \Aphreton\APIRoute {
 			$payload = [
 				'login' => $params->login,
 				'ip' => $client_ip,
-				'exp' => microtime(true) + $this->JWT_valid_duration
+				'exp' => microtime(true) + $this->parent->getConfigVar('jwt_valid_duration')
 			];
 			$result['token'] = $this->parent->encodeTokenPayload($payload);
 		} else {

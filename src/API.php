@@ -8,8 +8,8 @@ class API {
 	private $response;
 	private $json_validator;
 	private $config;
-	public static int $ERROR_TYPE_AUTH = 1;
-	public static int $ERROR_TYPE_NOT_FOUND = 2;
+	public const ERROR_TYPE_AUTH = 1;
+	public const ERROR_TYPE_NOT_FOUND = 2;
 	
 	public function __construct() {
 		error_reporting( E_ALL );
@@ -38,7 +38,7 @@ class API {
 		$token = $this->getBearerToken();
 		if (!$token) {
 			if ( (strcasecmp($route, 'auth') != 0) || (strcasecmp($endpoint, 'login') != 0) ) {
-				$this->triggerError('No authentication token provided', self::$ERROR_TYPE_AUTH);
+				$this->triggerError('No authentication token provided', self::ERROR_TYPE_AUTH);
 			}
 		} else {
 			$this->authenticate($token);
@@ -77,8 +77,15 @@ class API {
 		$client_ip = $this->getClientIPAddress();
 		if (strcasecmp($token_payload['ip'], $client_ip) != 0) {
 			//Client IP address mismatch
-			$this->triggerError('Authentication token error', self::$ERROR_TYPE_AUTH);
+			$this->triggerError('Authentication token error', self::ERROR_TYPE_AUTH);
 		}
+	}
+	
+	public function getConfigVar(string $name) {
+		if (array_key_exists($name, $this->config)) {
+			return $this->config[$name];
+		}
+		$this->triggerError('API error');
 	}
 	
 	public function getClientIPAddress() {
@@ -89,9 +96,9 @@ class API {
 		try {
 			return \Firebase\JWT\JWT::decode($token, new \Firebase\JWT\Key($this->config['jwt_key'], 'HS256'), 'HS256');
 		} catch (\Firebase\JWT\ExpiredException $e) {
-			$this->triggerError('Authentication token expired', self::$ERROR_TYPE_AUTH);
+			$this->triggerError('Authentication token expired', self::ERROR_TYPE_AUTH);
 		} catch (\Exception $e) {
-			$this->triggerError('Authentication token error', self::$ERROR_TYPE_AUTH);
+			$this->triggerError('Authentication token error', self::ERROR_TYPE_AUTH);
 		}
 	}
 	
@@ -109,7 +116,7 @@ class API {
 				$this->triggerError("API route {$route} is not valid");
 			}
 		} else {
-			$this->triggerError("API route {$route} not exists", self::$ERROR_TYPE_NOT_FOUND);
+			$this->triggerError("API route {$route} not exists", self::ERROR_TYPE_NOT_FOUND);
 		}
 		
 		if ($class && method_exists($class, $endpoint)) {
@@ -124,12 +131,12 @@ class API {
 			try {
 				$this->response->setData($class->{$endpoint}($params));
 			} catch (\Aphreton\AuthException $e) {
-				$this->triggerError("API route {$route} endpoint {$endpoint} error: {$e->getMessage()}", self::$ERROR_TYPE_AUTH);
+				$this->triggerError("API route {$route} endpoint {$endpoint} error: {$e->getMessage()}", self::ERROR_TYPE_AUTH);
 			} catch (\Exception $e) {
 				$this->triggerError("API route {$route} endpoint {$endpoint} error: {$e->getMessage()}");
 			}
 		} else {
-			$this->triggerError("API route {$route} endpoint {$endpoint} not exists", self::$ERROR_TYPE_NOT_FOUND);
+			$this->triggerError("API route {$route} endpoint {$endpoint} not exists", self::ERROR_TYPE_NOT_FOUND);
 		}
 	}
 	
@@ -142,9 +149,9 @@ class API {
 	public function triggerError(string $message, int $type = 0) {
 		$code = 500;
 		switch ($type) {
-			case self::$ERROR_TYPE_AUTH:
+			case self::ERROR_TYPE_AUTH:
 				$code = 401; break;
-			case self::$ERROR_TYPE_NOT_FOUND:
+			case self::ERROR_TYPE_NOT_FOUND:
 				$code = 404; break;
 		}
 		http_response_code($code);
