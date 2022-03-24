@@ -19,6 +19,10 @@ class API {
 		
 		$this->config = include('config/config.php');
 		
+		foreach ($this->config['databases'] as $name => $database) {
+			\Aphreton\DatabasePool::getInstance()->addDatabase($name, $database['dsn'], $database['user'], $database['password']);
+		}
+		
 		$this->json_validator = new \JsonSchema\Validator();
 		$this->request = new \Aphreton\APIRequest();
 		$this->response = new \Aphreton\APIResponse();
