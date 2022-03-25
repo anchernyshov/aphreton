@@ -8,6 +8,7 @@ class API {
 	private $response;
 	private $json_validator;
 	private $config;
+	private const CONFIG_PATH = 'config/config.php';
 	public const ERROR_TYPE_AUTH = 1;
 	public const ERROR_TYPE_NOT_FOUND = 2;
 	
@@ -16,19 +17,20 @@ class API {
 		ini_set('display_errors', 0);
 		set_error_handler([$this, 'errorHandler'], E_ALL);
 		register_shutdown_function([$this, 'errorShutdown']);
-		
-		$this->config = include('config/config.php');
-		
-		foreach ($this->config['databases'] as $name => $database) {
-			\Aphreton\DatabasePool::getInstance()->addDatabase($name, $database['dsn'], $database['user'], $database['password']);
-		}
-		
+
 		$this->json_validator = new \JsonSchema\Validator();
 		$this->request = new \Aphreton\APIRequest();
 		$this->response = new \Aphreton\APIResponse();
 	}
 	
 	public function run() {
+		if (file_exists(self::CONFIG_PATH)) {
+			$this->config = include(self::CONFIG_PATH);
+		} else {
+			//config error - config does not exist
+			$this->triggerError('API error');
+		}
+		$this->initializeAPIFromConfig();
 		$this->validateInput();
 		
 		$input_data = $this->request->getData();
@@ -50,6 +52,15 @@ class API {
 
 		$this->process($route, $endpoint, $params);
 		$this->out();
+	}
+
+	private function initializeAPIFromConfig() {
+		foreach ($this->config['databases'] as $name => $database) {
+			$dsn = $this->getConfigVar('dsn', $database);
+			$user = $this->getConfigVar('user', $database);
+			$password = $this->getConfigVar('password', $database);
+			\Aphreton\DatabasePool::getInstance()->addDatabase($name, $dsn, $user, $password);
+		}
 	}
 	
 	private function validateInput() {
@@ -85,11 +96,15 @@ class API {
 		}
 	}
 	
-	public function getConfigVar(string $name) {
-		if (array_key_exists($name, $this->config)) {
-			return $this->config[$name];
+	public function getConfigVar(string $name, array $base = null) {
+		if (!$base) {
+			$base = $this->config;
 		}
-		$this->triggerError('API error');
+		if (!array_key_exists($name, $base)) {
+			//config error - requested key does not exist
+			$this->triggerError('API error');
+		}
+		return $base[$name];
 	}
 	
 	public function getClientIPAddress() {
@@ -182,7 +197,7 @@ class API {
 			$this->errorHandler($error['type'], $error['message'], $error['file'], $error['line']);
 		}
 	}
-	
+
 	public function errorHandler($type, $error, $file, $line) {
 		if (0 === error_reporting()) {
 			return false;
