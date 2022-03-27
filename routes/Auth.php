@@ -26,20 +26,7 @@ class Auth extends \Aphreton\APIRoute {
         $result = [];
         $client_ip = $this->parent->getClientIPAddress();
 
-        /* TODO: Main database preparation on first launch
-            CREATE TABLE "USERS" (
-                "id"	INTEGER NOT NULL UNIQUE,
-                "login"	TEXT NOT NULL UNIQUE,
-                "password"	TEXT NOT NULL,
-                PRIMARY KEY("id" AUTOINCREMENT)
-            );
-        */
-        
-        $user = \Aphreton\DatabasePool::getInstance()->getDatabase('test')->query(
-            "SELECT * FROM USERS WHERE login = :login AND password = :password", 
-            ['login' => $params->login, 'password' => $params->password]
-        );
-
+        $user = \Aphreton\Models\User::get(['login' => $params->login, 'password' => $params->password]);
         if ($user) {
             $payload = [
                 'login' => $params->login,
