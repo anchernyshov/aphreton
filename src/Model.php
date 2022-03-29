@@ -64,7 +64,7 @@ class Model {
         }
         $sql .= ' WHERE ' . implode(' AND ', $conditions);
 
-        $search_result = $e_connection->query($sql, $params);
+        $search_result = $e_connection->query($sql, $params)->fetchAll(\PDO::FETCH_ASSOC);
         if (!empty($search_result)) {
             //TODO: handle multiple records in search result
             $source = $search_result[0];
@@ -78,10 +78,20 @@ class Model {
         return null;
     }
 
+    /**
+     * Getter for $this->table_name
+     * 
+     * @return string
+     */
     public function getTableName() {
         return $this->table_name;
     }
 
+    /**
+     * Getter for $this->connection
+     * 
+     * @return \Aphreton\DatabaseConnection
+     */
     public function getConnection() {
         return $this->connection;
     }

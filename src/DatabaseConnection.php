@@ -44,22 +44,21 @@ class DatabaseConnection {
      * 
      * @throws Exception if PDO error occures
      * 
-     * @return array
+     * @return object
      */
     public function query(string $sql, $params = null) {
-        $result = [];
         if (is_null($this->pdo)) {
             $this->pdo = new \PDO($this->dsn, $this->username, $this->password);
-            $this->pdo->setAttribute( \PDO::ATTR_EMULATE_PREPARES , false );
+            $this->pdo->setAttribute( \PDO::ATTR_EMULATE_PREPARES, false );
             $this->pdo->setAttribute( \PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION );
+            $this->pdo->setAttribute( \PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC ); 
         }
         try {
             $stmt = $this->pdo->prepare($sql); 
             $stmt->execute($params);
-            $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            return $stmt;
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
         }
-        return $result;
     }
 }

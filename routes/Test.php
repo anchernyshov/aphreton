@@ -20,7 +20,7 @@ class Test extends \Aphreton\APIRoute {
     }
 
     public function default($params) {
-        return ['Hello from Test route default endpoint!'];
+        return ["Hello, {$this->parent->getUser()->login}, from Test route default endpoint!"];
     }
 
     public function testException($params) {

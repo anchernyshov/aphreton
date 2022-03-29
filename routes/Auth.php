@@ -28,6 +28,7 @@ class Auth extends \Aphreton\APIRoute {
 
         $user = \Aphreton\Models\User::get(['login' => $params->login, 'password' => $params->password]);
         if ($user) {
+            $user->updateLastLogined();
             $payload = [
                 'login' => $params->login,
                 'ip' => $client_ip,

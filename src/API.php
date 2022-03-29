@@ -16,6 +16,10 @@ class API {
      */
     private $request;
     /**
+     * @var \Aphreton\Models\User
+     */
+    private $user;
+    /**
      * @var \Aphreton\APIResponse
      */
     private $response;
@@ -131,6 +135,15 @@ class API {
             $this->triggerError('API error');
         }
         return $base[$name];
+    }
+
+    /**
+     * Getter for $this->user
+     * 
+     * @return \Aphreton\Models\User
+     */
+    public function getUser() {
+        return $this->user;
     }
 
     /**
@@ -259,6 +272,7 @@ class API {
             //Client IP address mismatch
             $this->triggerError('Authentication token error', self::ERROR_TYPE_AUTH);
         }
+        $this->user = \Aphreton\Models\User::get(['login' => $token_payload['login']]);
     }
 
     /**
