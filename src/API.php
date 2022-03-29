@@ -211,6 +211,7 @@ class API {
      * @return void
      */
     private function initializeAPIFromConfig() {
+        date_default_timezone_set($this->getConfigVar('timezone'));
         foreach ($this->config['databases'] as $name => $database) {
             $dsn = $this->getConfigVar('dsn', $database);
             $user = $this->getConfigVar('user', $database);
