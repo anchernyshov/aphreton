@@ -301,7 +301,10 @@ class API {
         }
         
         if ($class && method_exists($class, $endpoint)) {
-            //TODO: Access control
+            $required_level = $class->getRequiredUserLevelForEndpoint($endpoint);
+            if ($this->user && $this->user->level < $required_level) {
+                $this->triggerError("API route {$route} endpoint {$endpoint} is not allowed for current user", self::ERROR_TYPE_AUTH);
+            }
             $schema = $class->getJSONSchemaForEndpoint($endpoint);
             if ($schema) {
                 $errors = $this->validateJSONSchema($params, $schema);

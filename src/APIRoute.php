@@ -28,6 +28,12 @@ class APIRoute {
      * @var array
      */
     protected $schema = [];
+    /**
+     * Array containing minimum user access levels for each endpoint name.
+     * Example: ['default' => 0, 'secret' => 1]
+     * @var array
+     */
+    protected $acl = [];
 
     protected function __construct($parent) {
         $this->parent = $parent;
@@ -46,6 +52,18 @@ class APIRoute {
     }
 
     /**
+     * Sets user level required to access endpoint with given name
+     * 
+     * @param string $name Endpoint name
+     * @param int $level Required user level
+     * 
+     * @return void
+     */
+    protected function setRequiredUserLevelForEndpoint(string $name, int $level) {
+        $this->acl[$name] = $level;
+    }
+
+    /**
      * Gets JSON schema for endpoint with given name
      * 
      * @param string $name Endpoint name
@@ -57,5 +75,21 @@ class APIRoute {
             return $this->schema[$name];
         }
         return null;
+    }
+
+    /**
+     * Gets user level required to access endpoint with given name
+     * 
+     * If no level is set for endpoint $name, this function will return 0 (allow for any user)
+     * 
+     * @param string $name Endpoint name
+     * 
+     * @return int
+     */
+    public function getRequiredUserLevelForEndpoint(string $name) {
+        if (array_key_exists($name, $this->acl)) {
+            return $this->acl[$name];
+        }
+        return 0;
     }
 }

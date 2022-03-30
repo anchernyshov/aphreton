@@ -20,6 +20,10 @@ class User extends \Aphreton\Model {
      */
     public string $password;
     /**
+     * @var int
+     */
+    public string $level;
+    /**
      * @var string
      */
     public string $last_logined;
@@ -29,6 +33,7 @@ class User extends \Aphreton\Model {
             "id" INTEGER NOT NULL UNIQUE,
             "login" TEXT NOT NULL UNIQUE,
             "password" TEXT NOT NULL,
+            "level" INTEGER NOT NULL DEFAULT 0,
             "last_logined" TEXT,
             PRIMARY KEY("id" AUTOINCREMENT)
         );

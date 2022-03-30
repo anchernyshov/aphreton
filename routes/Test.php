@@ -17,6 +17,7 @@ class Test extends \Aphreton\APIRoute {
                 'required' => ['message']
             ]
         );
+        $this->setRequiredUserLevelForEndpoint('default', 1);
     }
 
     public function default($params) {
