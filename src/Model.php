@@ -5,7 +5,7 @@ namespace Aphreton;
 /**
  * Base class for all model classes
  * 
- * To create custom model you need to extend Model class and set $connection and $table_name
+ * To create custom model you need to extend Model class and set $connection and $source_name
  * properties in constructor of the derived class
  * 
  * Example:
@@ -14,12 +14,12 @@ namespace Aphreton;
  *     public function __construct() {
  *         parent::__construct();
  *         $this->connection = \Aphreton\DatabasePool::getInstance()->getDatabase('DATABASE_NAME');
- *         $this->source_name = 'TABLE_NAME';
+ *         $this->source_name = 'TABLE_NAME'; //or DATABASE_NAME.COLLECTION.NAME for mongoDB
  *     }
  *     ...
  * }
  */
-class Model {
+abstract class Model {
 
     /**
      * @var \Aphreton\DatabaseConnection
@@ -43,7 +43,7 @@ class Model {
      * 
      * @return null|object
      */
-    public static function get($params = []) {
+    public static function get($params) {
         if (empty($params)) {
             //Empty database search parameters, restrict for now
             //TODO: handle multiple records in search result
@@ -69,6 +69,21 @@ class Model {
         } else {
             return null;
         }
+    }
+
+    /**
+     * Saves current object to the database
+     * 
+     * @return void
+     */
+    public function save() {
+        $reflection = new \ReflectionObject($this);
+        $properties = $reflection->getProperties(\ReflectionProperty::IS_PUBLIC);
+        $data = [];
+        foreach ($properties as $prop) {
+            $data[$prop->getName()] = $prop->getValue($this);
+        }
+        $this->connection->insert($this->source_name, $data);
     }
 
     /**

@@ -24,7 +24,8 @@ class DatabasePool {
      * @var array
      */
     public const ALLOWED_DATABASE_TYPES = [
-        'sqlite'
+        'sqlite',
+        'mongodb'
     ];
 
     /**
@@ -56,6 +57,8 @@ class DatabasePool {
         if (in_array($type, self::ALLOWED_DATABASE_TYPES)) {
             if ($type === 'sqlite') {
                 $this->databases[$name] = new \Aphreton\PDOConnection($dsn, $user, $password);
+            } else if ($type === 'mongodb') {
+                $this->databases[$name] = new \Aphreton\MongoDBConnection($dsn, $user, $password);
             }
         } else {
             throw new \Exception("Database type $type is not allowed");

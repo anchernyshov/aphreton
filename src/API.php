@@ -32,6 +32,10 @@ class API {
      */
     private $config;
     /**
+     * @var bool
+     */
+    private bool $log_enable = false;
+    /**
      * @var string
      */
     private const CONFIG_PATH = 'config/config.php';
@@ -131,7 +135,7 @@ class API {
             $base = $this->config;
         }
         if (!array_key_exists($name, $base)) {
-            //config error - requested key does not exist
+            $this->log("Configuration error: key {$name} does not exist", \Aphreton\Models\LogEntry::LOG_TYPE_ERROR);
             $this->triggerError('API error');
         }
         return $base[$name];
@@ -211,6 +215,7 @@ class API {
      * @return void
      */
     private function initializeAPIFromConfig() {
+        $this->log_enable = $this->getConfigVar('log_enable');
         date_default_timezone_set($this->getConfigVar('timezone'));
         foreach ($this->config['databases'] as $name => $database) {
             $dsn = $this->getConfigVar('dsn', $database);
@@ -426,6 +431,17 @@ class API {
             }
         }
         return null;
+    }
+
+    /**
+     * Writes message to log database if config variable log_enable is set to true
+     * 
+     * @return void
+     */
+    private function log(string $message, int $level = null) {
+        if ($this->log_enable) {
+            \Aphreton\Models\LogEntry::create($message, $level);
+        }
     }
 }
 
