@@ -14,7 +14,7 @@ namespace Aphreton;
  *     public function __construct() {
  *         parent::__construct();
  *         $this->connection = \Aphreton\DatabasePool::getInstance()->getDatabase('DATABASE_NAME');
- *         $this->table_name = 'TABLE_NAME';
+ *         $this->source_name = 'TABLE_NAME';
  *     }
  *     ...
  * }
@@ -26,10 +26,10 @@ class Model {
      */
     protected $connection;
     /**
-     * Name of database table where model data is stored
+     * Name of database entity where model data is stored
      * @var string
      */
-    protected string $table_name;
+    protected string $source_name;
 
     public function __construct() { }
 
@@ -54,10 +54,10 @@ class Model {
         $class = new \ReflectionClass(get_called_class());
         $entity = $class->newInstance();
         
-        $e_table_name = $entity->getTableName();
+        $e_source_name = $entity->getSourceName();
         $e_connection = $entity->getConnection();
 
-        $sql = "SELECT * FROM {$e_table_name}";
+        $sql = "SELECT * FROM {$e_source_name}";
         $conditions = [];
         foreach ($params as $key => $value) {
             $conditions[] = "{$key} = :{$key}";
@@ -79,12 +79,12 @@ class Model {
     }
 
     /**
-     * Getter for $this->table_name
+     * Getter for $this->source_name
      * 
      * @return string
      */
-    public function getTableName() {
-        return $this->table_name;
+    public function getSourceName() {
+        return $this->source_name;
     }
 
     /**

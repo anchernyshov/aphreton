@@ -19,6 +19,13 @@ class DatabasePool {
      * @var array
      */
     private $databases = array();
+    /**
+     * Allowed database types defined by DSN prefixes
+     * @var array
+     */
+    public const ALLOWED_DATABASE_TYPES = [
+        'sqlite'
+    ];
 
     /**
      * Gets the instance via lazy initialization 
@@ -40,10 +47,19 @@ class DatabasePool {
      * @param string $user Database user
      * @param string $password Database password
      * 
+     * @throws Exception if database type is not in self::ALLOWED_DATABASE_TYPES
+     * 
      * @return void
      */
     public function addDatabase(string $name, string $dsn, string $user, string $password) {
-        $this->databases[$name] = new \Aphreton\DatabaseConnection($dsn, $user, $password);
+        $type = explode(':', $dsn)[0];
+        if (in_array($type, self::ALLOWED_DATABASE_TYPES)) {
+            if ($type === 'sqlite') {
+                $this->databases[$name] = new \Aphreton\PDOConnection($dsn, $user, $password);
+            }
+        } else {
+            throw new \Exception("Database type $type is not allowed");
+        }
     }
 
     /**
