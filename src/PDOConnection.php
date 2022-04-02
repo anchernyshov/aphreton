@@ -44,4 +44,22 @@ class PDOConnection extends DatabaseConnection {
             throw new \Exception($e->getMessage());
         }
     }
+
+    /**
+     * Finds records in the database table
+     * 
+     * @param string $source Table name
+     * @param array $params Search parameters
+     * 
+     * @return null|array
+     */
+    public function find($source, $params = null) {
+        $sql = "SELECT * FROM {$source}";
+        $conditions = [];
+        foreach ($params as $key => $value) {
+            $conditions[] = "{$key} = :{$key}";
+        }
+        $sql .= ' WHERE ' . implode(' AND ', $conditions);
+        return $this->query($sql, $params)->fetchAll(\PDO::FETCH_ASSOC);
+    }
 }

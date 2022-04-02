@@ -57,25 +57,18 @@ class Model {
         $e_source_name = $entity->getSourceName();
         $e_connection = $entity->getConnection();
 
-        $sql = "SELECT * FROM {$e_source_name}";
-        $conditions = [];
-        foreach ($params as $key => $value) {
-            $conditions[] = "{$key} = :{$key}";
-        }
-        $sql .= ' WHERE ' . implode(' AND ', $conditions);
-
-        $search_result = $e_connection->query($sql, $params)->fetchAll(\PDO::FETCH_ASSOC);
-        if (!empty($search_result)) {
-            //TODO: handle multiple records in search result
-            $source = $search_result[0];
+        $records = $e_connection->find($e_source_name, $params);
+        if (!empty($records)) {
+            $record = $records[0];
             foreach ($class->getProperties(\ReflectionProperty::IS_PUBLIC) as $prop) {
-                if (isset($source[$prop->getName()])) {
-                    $prop->setValue($entity, $source[$prop->getName()]);
+                if (isset($record[$prop->getName()])) {
+                    $prop->setValue($entity, $record[$prop->getName()]);
                 }
             }
             return $entity;
+        } else {
+            return null;
         }
-        return null;
     }
 
     /**
