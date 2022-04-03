@@ -30,6 +30,11 @@ abstract class Model {
      * @var string
      */
     protected string $source_name;
+    /**
+     * Unique record identifier, must be present in every model data source
+     * @var int|\MongoDB\BSON\ObjectId
+     */
+    protected $_id = null;
 
     public function __construct() { }
 
@@ -60,6 +65,8 @@ abstract class Model {
         $records = $e_connection->find($e_source_name, $params);
         if (!empty($records)) {
             $record = $records[0];
+            //Manually set $_id property of base class
+            $entity->_id = $record['_id'];
             foreach ($class->getProperties(\ReflectionProperty::IS_PUBLIC) as $prop) {
                 if (isset($record[$prop->getName()])) {
                     $prop->setValue($entity, $record[$prop->getName()]);
@@ -78,12 +85,22 @@ abstract class Model {
      */
     public function save() {
         $reflection = new \ReflectionObject($this);
+        //Does not include protected $_id property!
         $properties = $reflection->getProperties(\ReflectionProperty::IS_PUBLIC);
         $data = [];
         foreach ($properties as $prop) {
-            $data[$prop->getName()] = $prop->getValue($this);
+            if ($prop->getValue($this) !== null) {
+                $data[$prop->getName()] = $prop->getValue($this);
+            }
         }
-        $this->connection->insert($this->source_name, $data);
+        if (isset($this->_id)) {
+             //If $_id field is set, database record exists => update
+            $this->connection->update($this->source_name, ['_id' => $this->_id], $data);
+        } else {
+            //Inserting data and updating id field
+            //TODO: Unique constraint check
+            $this->_id = $this->connection->insert($this->source_name, $data);
+        }
     }
 
     /**

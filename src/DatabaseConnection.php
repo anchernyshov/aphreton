@@ -28,4 +28,8 @@ abstract class DatabaseConnection {
         $this->username = $username;
         $this->password = $password;
     }
+
+    public function insert(string $source, array $data) { }
+
+    public function update(string $source, array $filter, array $data) { }
 }

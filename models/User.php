@@ -4,33 +4,31 @@ namespace Aphreton\Models;
 
 /**
  * Represents API user
+ * 
+ * @property \Aphreton\PDOConnection $connection
  */
 class User extends \Aphreton\Model {
 
     /**
-     * @var int
+     * @var ?string
      */
-    public int $id;
+    public $login = null;
     /**
-     * @var string
+     * @var ?string
      */
-    public string $login;
-    /**
-     * @var string
-     */
-    public string $password;
+    public $password = null;
     /**
      * @var int
      */
-    public string $level;
+    public $level = 0;
     /**
-     * @var string
+     * @var ?string
      */
-    public string $last_logined;
+    public $last_logined = null;
 
     /* TODO: Main database preparation on first launch
         CREATE TABLE "USERS" (
-            "id" INTEGER NOT NULL UNIQUE,
+            "_id" INTEGER NOT NULL UNIQUE,
             "login" TEXT NOT NULL UNIQUE,
             "password" TEXT NOT NULL,
             "level" INTEGER NOT NULL DEFAULT 0,
@@ -43,17 +41,5 @@ class User extends \Aphreton\Model {
         parent::__construct();
         $this->connection = \Aphreton\DatabasePool::getInstance()->getDatabase('test');
         $this->source_name = 'USERS';
-    }
-
-    /**
-     * Sets last_logined field value to current timestamp
-     * 
-     * @return void
-     */
-    public function updateLastLogined() {
-        $result = $this->connection->query(
-            'UPDATE USERS SET last_logined = :last_logined WHERE id = :id',
-            ['last_logined' => date('Y-m-d H:i:s'), 'id' => $this->id]
-        )->rowCount();
     }
 }

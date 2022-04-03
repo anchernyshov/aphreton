@@ -4,6 +4,8 @@ namespace Aphreton\Models;
 
 /**
  * Represents log entry
+ * 
+ * @property \Aphreton\MongoDBConnection $connection
  */
 class LogEntry extends \Aphreton\Model {
 
@@ -20,21 +22,17 @@ class LogEntry extends \Aphreton\Model {
      */
     public const LOG_TYPE_ERROR = 2;
     /**
-     * @var \MongoDB\BSON\ObjectId
-     */
-    private $_id = null;
-    /**
      * @var int
      */
-    public int $level;
+    public $level = 0;
     /**
-     * @var string
+     * @var ?string
      */
-    public string $message;
+    public $message = null;
     /**
-     * @var string
+     * @var ?string
      */
-    public string $timestamp;
+    public $timestamp = null;
 
     public function __construct() {
         parent::__construct();

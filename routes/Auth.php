@@ -25,10 +25,10 @@ class Auth extends \Aphreton\APIRoute {
     public function login($params) {
         $result = [];
         $client_ip = $this->parent->getClientIPAddress();
-
         $user = \Aphreton\Models\User::get(['login' => $params->login, 'password' => $params->password]);
         if ($user) {
-            $user->updateLastLogined();
+            $user->last_logined = date('Y-m-d H:i:s');
+            $user->save();
             $payload = [
                 'login' => $params->login,
                 'ip' => $client_ip,
