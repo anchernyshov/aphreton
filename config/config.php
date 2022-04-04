@@ -6,15 +6,15 @@ return [
     'jwt_valid_duration' => 1 * 1 * 60, //1 minute for testing purposes
     'log_enable' => true,
     'databases' => [
-        'test' => [
-            'dsn' => 'sqlite:test.sqlite3',
-            'user' => '',
-            'password' => ''
-        ],
         'logs' => [
             'dsn' => 'mongodb://localhost:27017/?authSource=aphreton&readPreference=primary&ssl=false',
             'user' => 'logger',
             'password' => 'test'
+        ],
+        'test' => [
+            'dsn' => 'sqlite:test.sqlite3',
+            'user' => '',
+            'password' => ''
         ]
     ]
 ];
