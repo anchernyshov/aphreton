@@ -39,18 +39,11 @@ class API {
      * @var string
      */
     private const CONFIG_PATH = 'config/config.php';
-    /**
-     * @var int
-     */
-    public const ERROR_TYPE_AUTH = 1;
-    /**
-     * @var int
-     */
-    public const ERROR_TYPE_NOT_FOUND = 2;
 
     public function __construct() {
         error_reporting( E_ALL );
         ini_set('display_errors', 0);
+        set_exception_handler([$this, 'exceptionHandler']);
         set_error_handler([$this, 'errorHandler'], E_ALL);
         register_shutdown_function([$this, 'errorShutdown']);
 
@@ -70,8 +63,8 @@ class API {
         if (file_exists(self::CONFIG_PATH)) {
             $this->config = include(self::CONFIG_PATH);
         } else {
-            //config error - config does not exist
-            $this->triggerError('API error');
+            //log database is not initialized here - throw generic exception
+            throw new \Exception('API configuration error');
         }
         $this->initializeAPIFromConfig();
         $this->validateInput();
@@ -87,7 +80,13 @@ class API {
         $token = $this->getBearerToken();
         if (!$token) {
             if ( (strcasecmp($route, 'auth') != 0) || (strcasecmp($endpoint, 'login') != 0) ) {
-                $this->triggerError('No authentication token provided', self::ERROR_TYPE_AUTH);
+                //TODO: temporarily ban user without token after X attempts
+                throw new \Aphreton\APIException(
+                    'Endpoint access attempt without authentication token',
+                    \Aphreton\Models\LogEntry::LOG_LEVEL_WARNING,
+                    'No authentication token provided',
+                    \Aphreton\APIException::ERROR_TYPE_AUTH
+                );
             }
         } else {
             $this->authenticate($token);
@@ -109,17 +108,6 @@ class API {
     }
 
     /**
-     * Sets error display ini variable for debugging purposes
-     * 
-     * @param bool $flag
-     * 
-     * @return void
-     */
-    public function setErrorReportPolicy(bool $flag) {
-        ini_set('display_errors', (int)$flag);
-    }
-
-    /**
      * Returns value of configuration file variable with given name
      * 
      * Parameter $base defines offset in the config tree. By default $base point to the root of the config
@@ -135,8 +123,10 @@ class API {
             $base = $this->config;
         }
         if (!array_key_exists($name, $base)) {
-            $this->log("Configuration error: key {$name} does not exist", \Aphreton\Models\LogEntry::LOG_TYPE_ERROR);
-            $this->triggerError('API error');
+            throw new \Aphreton\APIException(
+                "Configuration error: key {$name} does not exist",
+                \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+            );
         }
         return $base[$name];
     }
@@ -192,9 +182,19 @@ class API {
         try {
             return \Firebase\JWT\JWT::decode($token, new \Firebase\JWT\Key($this->config['jwt_key'], 'HS256'), 'HS256');
         } catch (\Firebase\JWT\ExpiredException $e) {
-            $this->triggerError('Authentication token expired', self::ERROR_TYPE_AUTH);
+            throw new \Aphreton\APIException(
+                'Attempt to authenticate with expired token',
+                \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR,
+                'Authentication token expired',
+                \Aphreton\APIException::ERROR_TYPE_AUTH
+            );
         } catch (\Exception $e) {
-            $this->triggerError('Authentication token error', self::ERROR_TYPE_AUTH);
+            throw new \Aphreton\APIException(
+                'Authentication token error: '.$e->getMessage(),
+                \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR,
+                'Authentication token error',
+                \Aphreton\APIException::ERROR_TYPE_AUTH
+            );
         }
     }
 
@@ -240,25 +240,45 @@ class API {
      */
     private function validateInput() {
         if(!isset($_SERVER['REQUEST_METHOD']) || strcasecmp($_SERVER['REQUEST_METHOD'], 'POST') != 0){
-            $this->triggerError('API requests are required to use POST method');
+            throw new \Aphreton\APIException(
+                'Wrong request method',
+                \Aphreton\Models\LogEntry::LOG_LEVEL_WARNING,
+                'API requests are required to use POST method'
+            );
         }
         if (!isset($_SERVER['CONTENT_TYPE']) || strcasecmp($_SERVER['CONTENT_TYPE'], 'application/json') != 0) {
-            $this->triggerError('API requests are required to use Content-Type: application/json header');
+            throw new \Aphreton\APIException(
+                'Wrong request content type',
+                \Aphreton\Models\LogEntry::LOG_LEVEL_WARNING,
+                'API requests are required to use Content-Type: application/json header'
+            );
         }
         $input = file_get_contents('php://input');
         filter_var($input, FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
         if (!$input) {
-            $this->triggerError('Request is empty');
+            throw new \Aphreton\APIException(
+                'Empty request body',
+                \Aphreton\Models\LogEntry::LOG_LEVEL_WARNING,
+                'Request is empty'
+            );
         }
         $input = json_decode($input);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            $this->triggerError('Request is not a valid JSON');
+            throw new \Aphreton\APIException(
+                'Malformed request JSON',
+                \Aphreton\Models\LogEntry::LOG_LEVEL_WARNING,
+                'Request is not a valid JSON'
+            );
         }
         
         $this->request->setData($input);
         $errors = $this->validateJSONSchema($this->request->getData(), $this->request->getJSONSchema());
         if (!empty($errors)) {
-            $this->triggerError("Request validation error. {$errors}");
+            throw new \Aphreton\APIException(
+                "Request validation error. {$errors}",
+                \Aphreton\Models\LogEntry::LOG_LEVEL_WARNING,
+                "Request validation error. {$errors}"
+            );
         }
     }
 
@@ -275,8 +295,12 @@ class API {
         $token_payload = (array) $this->decodeToken($token);
         $client_ip = $this->getClientIPAddress();
         if (strcasecmp($token_payload['ip'], $client_ip) != 0) {
-            //Client IP address mismatch
-            $this->triggerError('Authentication token error', self::ERROR_TYPE_AUTH);
+            throw new \Aphreton\APIException(
+                'Client IP address mismatch. IP address from token: ' . $token_payload['ip'],
+                \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR,
+                "Authentication token error",
+                \Aphreton\APIException::ERROR_TYPE_AUTH
+            );
         }
         $this->user = \Aphreton\Models\User::get(['login' => $token_payload['login']]);
     }
@@ -299,59 +323,76 @@ class API {
             if (is_subclass_of($class_str, 'Aphreton\\APIRoute')) {
                 $class = new $class_str($this);
             } else {
-                $this->triggerError("API route {$route} is not valid");
+                throw new \Aphreton\APIException(
+                    "API route {$route} is not valid",
+                    \Aphreton\Models\LogEntry::LOG_LEVEL_WARNING,
+                    "API route {$route} is not exists",
+                    \Aphreton\APIException::ERROR_TYPE_NOT_FOUND
+                );
             }
         } else {
-            $this->triggerError("API route {$route} not exists", self::ERROR_TYPE_NOT_FOUND);
+            throw new \Aphreton\APIException(
+                "API route {$route} is not exists",
+                \Aphreton\Models\LogEntry::LOG_LEVEL_WARNING,
+                "API route {$route} is not exists",
+                \Aphreton\APIException::ERROR_TYPE_NOT_FOUND
+            );
         }
         
         if ($class && method_exists($class, $endpoint)) {
             $required_level = $class->getRequiredUserLevelForEndpoint($endpoint);
             if ($this->user && $this->user->level < $required_level) {
-                $this->triggerError("API route {$route} endpoint {$endpoint} is not allowed for current user", self::ERROR_TYPE_AUTH);
+                throw new \Aphreton\APIException(
+                    "User authorization error for endpoint {$route}.{$endpoint} (level required: {$required_level}, user level: {$this->user->level})",
+                    \Aphreton\Models\LogEntry::LOG_LEVEL_WARNING,
+                    'Authorization error',
+                    \Aphreton\APIException::ERROR_TYPE_AUTH
+                );
             }
             $schema = $class->getJSONSchemaForEndpoint($endpoint);
             if ($schema) {
                 $errors = $this->validateJSONSchema($params, $schema);
                 if (!empty($errors)) {
-                    $this->triggerError("API route {$route} endpoint {$endpoint} data validation error. {$errors}");
+                    throw new \Aphreton\APIException(
+                        "Endpoint data validation error. {$errors}",
+                        \Aphreton\Models\LogEntry::LOG_LEVEL_WARNING,
+                        "Endpoint data validation error. {$errors}"
+                    );
                 }
             }
             try {
                 $this->response->setData($class->{$endpoint}($params));
             } catch (\Aphreton\AuthException $e) {
-                $this->triggerError("API route {$route} endpoint {$endpoint} error: {$e->getMessage()}", self::ERROR_TYPE_AUTH);
+                throw $e;
             } catch (\Exception $e) {
-                $this->triggerError("API route {$route} endpoint {$endpoint} error: {$e->getMessage()}");
+                throw new \Aphreton\APIException(
+                    "API route {$route} endpoint {$endpoint} error: {$e->getMessage()}",
+                    \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+                );
             }
         } else {
-            $this->triggerError("API route {$route} endpoint {$endpoint} not exists", self::ERROR_TYPE_NOT_FOUND);
+            throw new \Aphreton\APIException(
+                "API route {$route} endpoint {$endpoint} not exists",
+                \Aphreton\Models\LogEntry::LOG_LEVEL_WARNING,
+                "API route {$route} endpoint {$endpoint} not exists",
+                \Aphreton\APIException::ERROR_TYPE_NOT_FOUND
+            );
         }
     }
 
-    /**
-     * Stops the program from executing with given error and type
-     * 
-     * This function sets HTTP response code according to error type and passes error handling to registered shutdown function
-     * $type == self::ERROR_TYPE_AUTH -> HTTP error code 401
-     * $type == ERROR_TYPE_NOT_FOUND -> HTTP error code 404
-     * $type not specified -> HTTP error code 500
-     * 
-     * @param string $message
-     * @param int{self::ERROR_TYPE_AUTH|self::ERROR_TYPE_NOT_FOUND} $type (optional)
-     * 
-     * @return string
-     */
-    private function triggerError(string $message, int $type = 0) {
+    public function exceptionHandler($exception) {
         $code = 500;
-        switch ($type) {
-            case self::ERROR_TYPE_AUTH:
-                $code = 401; break;
-            case self::ERROR_TYPE_NOT_FOUND:
-                $code = 404; break;
+        if ($exception instanceof \Aphreton\APIException) {
+            $this->log($exception->getLogMessage(), $exception->getLogLevel());
+            switch ($exception->getCode()) {
+                case \Aphreton\APIException::ERROR_TYPE_AUTH:
+                    $code = 401; break;
+                case \Aphreton\APIException::ERROR_TYPE_NOT_FOUND:
+                    $code = 404; break;
+            }
         }
         http_response_code($code);
-        trigger_error($message, E_USER_ERROR);
+        trigger_error($exception->getMessage(), E_USER_ERROR);
     }
 
     /**

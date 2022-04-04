@@ -16,11 +16,11 @@ class LogEntry extends \Aphreton\Model {
     /**
      * @var int
      */
-    public const LOG_TYPE_WARNING = 1;
+    public const LOG_LEVEL_WARNING = 1;
     /**
      * @var int
      */
-    public const LOG_TYPE_ERROR = 2;
+    public const LOG_LEVEL_ERROR = 2;
     /**
      * @var int
      */

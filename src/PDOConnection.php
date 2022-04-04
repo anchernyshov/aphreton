@@ -41,7 +41,7 @@ class PDOConnection extends DatabaseConnection {
             $stmt->execute($params);
             return $stmt;
         } catch (\Exception $e) {
-            throw new \Exception($e->getMessage());
+            throw new \Aphreton\APIException($e->getMessage(), 'API database error');
         }
     }
 

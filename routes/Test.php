@@ -17,10 +17,13 @@ class Test extends \Aphreton\APIRoute {
                 'required' => ['message']
             ]
         );
-        $this->setRequiredUserLevelForEndpoint('default', 1);
+        $this->setRequiredUserLevelForEndpoint('default', 0);
     }
 
     public function default($params) {
+        //TODO: fix PHP data leak in error messages:
+        //$this->testError();
+        //$this->testError($params);
         return ["Hello, {$this->parent->getUser()->login}, from Test route default endpoint!"];
     }
 

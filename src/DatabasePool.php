@@ -61,7 +61,7 @@ class DatabasePool {
                 $this->databases[$name] = new \Aphreton\MongoDBConnection($dsn, $user, $password);
             }
         } else {
-            throw new \Exception("Database type $type is not allowed");
+            throw new \Aphreton\APIException("Database type $type is not allowed");
         }
     }
 
@@ -76,7 +76,7 @@ class DatabasePool {
      */
     public function getDatabase($name) {
         if (!array_key_exists($name, $this->databases)) {
-            throw new \Exception("Database $name does not exist");
+            throw new \Aphreton\APIException("Database $name does not exist");
         }
         return $this->databases[$name];
     }
@@ -103,6 +103,6 @@ class DatabasePool {
      * @return void
      */
     public function __wakeup() { 
-        throw new \Exception("Cannot unserialize singleton");
+        throw new \Aphreton\APIException('Cannot unserialize database pool singleton');
     }
 }
