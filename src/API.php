@@ -362,7 +362,7 @@ class API {
             }
             try {
                 $this->response->setData($class->{$endpoint}($params));
-            } catch (\Aphreton\AuthException $e) {
+            } catch (\Aphreton\APIException $e) {
                 throw $e;
             } catch (\Exception $e) {
                 throw new \Aphreton\APIException(
@@ -380,8 +380,22 @@ class API {
         }
     }
 
+    /**
+     * Exception handler function
+     * 
+     * This function sets HTTP response code according to exception code and triggers E_USER_ERROR with exception message
+     * $exception->getCode() == Aphreton\APIException::ERROR_TYPE_AUTH -> HTTP error code 401
+     * $exception->getCode() == Aphreton\APIException::ERROR_TYPE_NOT_FOUND -> HTTP error code 404
+     * $exception->getCode() not specified (0 by default) -> HTTP error code 500
+     * 
+     * @param string $message
+     * @param int{self::ERROR_TYPE_AUTH|self::ERROR_TYPE_NOT_FOUND} $type (optional)
+     * 
+     * @return string
+     */
     public function exceptionHandler($exception) {
         $code = 500;
+        $message = \Aphreton\APIException::DEFAULT_API_ERROR_MESSAGE;
         if ($exception instanceof \Aphreton\APIException) {
             $this->log($exception->getLogMessage(), $exception->getLogLevel());
             switch ($exception->getCode()) {
@@ -390,9 +404,10 @@ class API {
                 case \Aphreton\APIException::ERROR_TYPE_NOT_FOUND:
                     $code = 404; break;
             }
+            $message = $exception->getMessage();
         }
         http_response_code($code);
-        trigger_error($exception->getMessage(), E_USER_ERROR);
+        trigger_error($message, E_USER_ERROR);
     }
 
     /**
@@ -429,7 +444,7 @@ class API {
             case E_CORE_WARNING:
             case E_COMPILE_WARNING:
             case E_PARSE:
-                $this->response->setError('API Error');
+                $this->response->setError(\Aphreton\APIException::DEFAULT_API_ERROR_MESSAGE);
                 break;
             case E_USER_ERROR:
                 $this->response->setError($error);
@@ -485,5 +500,3 @@ class API {
         }
     }
 }
-
-class AuthException extends \Exception {}

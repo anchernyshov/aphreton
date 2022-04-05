@@ -21,6 +21,10 @@ class APIException extends \Exception {
      * @var int
      */
     public const ERROR_TYPE_NOT_FOUND = 2;
+    /**
+     * @var string
+     */
+    public const DEFAULT_API_ERROR_MESSAGE = 'API Error';
 
     /**
      * Message to write to log

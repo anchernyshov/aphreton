@@ -21,14 +21,18 @@ class Test extends \Aphreton\APIRoute {
     }
 
     public function default($params) {
-        //TODO: fix PHP data leak in error messages:
         //$this->testError();
         //$this->testError($params);
+        //$this->testException($params);
         return ["Hello, {$this->parent->getUser()->login}, from Test route default endpoint!"];
     }
 
     public function testException($params) {
-        throw new \Exception('Exception from Test route default endpoint!');
+        throw new \Aphreton\APIException(
+            'Exception from Test route default endpoint!',
+            \Aphreton\Models\LogEntry::LOG_LEVEL_WARNING,
+            'Exception from Test route default endpoint!'
+        );
     }
 
     public function testError($params) {
