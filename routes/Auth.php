@@ -36,7 +36,12 @@ class Auth extends \Aphreton\APIRoute {
             ];
             $result['token'] = $this->parent->encodeTokenPayload($payload);
         } else {
-            throw new \Aphreton\AuthException('Incorrect password');
+            throw new \Aphreton\APIException(
+                'Attempt to authenticate with invalid credentials',
+                \Aphreton\Models\LogEntry::LOG_LEVEL_WARNING,
+                'Incorrect username or password',
+                \Aphreton\APIException::ERROR_TYPE_AUTH
+            );
         }
         return $result;
     }
