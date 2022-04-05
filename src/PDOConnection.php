@@ -54,10 +54,10 @@ class PDOConnection extends DatabaseConnection {
      * @return null|array
      */
     public function find($source, $params = null) {
-        $sql = "SELECT * FROM {$source}";
+        $sql = 'SELECT * FROM ' . $source;
         $conditions = [];
         foreach ($params as $key => $value) {
-            $conditions[] = "{$key} = :{$key}";
+            $conditions[] = $key . ' = :' . $key;
         }
         $sql .= ' WHERE ' . implode(' AND ', $conditions);
         return $this->query($sql, $params)->fetchAll(\PDO::FETCH_ASSOC);
@@ -105,15 +105,15 @@ class PDOConnection extends DatabaseConnection {
      */
     public function update(string $source, array $filter, array $data) {
         if (!empty($filter) && !empty($data)) {
-            $sql = "UPDATE {$source} SET ";
+            $sql = 'UPDATE ' . $source . ' SET ';
 
             $values = [];
             foreach ($data as $key => $value) {
-                $values[] = "{$key} = :{$key}";
+                $values[] = $key . ' = :' . $key;
             }
             $conditions = [];
             foreach ($filter as $key => $value) {
-                $conditions[] = "{$key} = :{$key}";
+                $conditions[] = $key . ' = :' . $key;
             }
 
             $sql .= implode(',', $values) . ' WHERE ' . implode(' AND ', $conditions);

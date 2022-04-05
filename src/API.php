@@ -124,7 +124,7 @@ class API {
         }
         if (!array_key_exists($name, $base)) {
             throw new \Aphreton\APIException(
-                "Configuration error: key {$name} does not exist",
+                'Configuration error: key ' . $name . ' does not exist',
                 \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
             );
         }
@@ -164,7 +164,7 @@ class API {
             $number_of_errors = count($this->json_validator->getErrors());
             $i = 0;
             foreach ($this->json_validator->getErrors() as $error) {
-                $errstr .= ($error['property'] ? "[{$error['property']}] " : '') . $error['message'];
+                $errstr .= ($error['property'] ? ('[' . $error['property'] . '] ') : '') . $error['message'];
                 $errstr .= ((++$i < $number_of_errors) ? '; ' : '');
             }
         }
@@ -190,7 +190,7 @@ class API {
             );
         } catch (\Exception $e) {
             throw new \Aphreton\APIException(
-                'Authentication token error: '.$e->getMessage(),
+                'Authentication token error: ' . $e->getMessage(),
                 \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR,
                 'Authentication token error',
                 \Aphreton\APIException::ERROR_TYPE_AUTH
@@ -275,9 +275,9 @@ class API {
         $errors = $this->validateJSONSchema($this->request->getData(), $this->request->getJSONSchema());
         if (!empty($errors)) {
             throw new \Aphreton\APIException(
-                "Request validation error. {$errors}",
+                'Request validation error. ' . $errors,
                 \Aphreton\Models\LogEntry::LOG_LEVEL_WARNING,
-                "Request validation error. {$errors}"
+                'Request validation error. ' . $errors
             );
         }
     }
@@ -298,7 +298,7 @@ class API {
             throw new \Aphreton\APIException(
                 'Client IP address mismatch. IP address from token: ' . $token_payload['ip'],
                 \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR,
-                "Authentication token error",
+                'Authentication token error',
                 \Aphreton\APIException::ERROR_TYPE_AUTH
             );
         }
@@ -324,17 +324,17 @@ class API {
                 $class = new $class_str($this);
             } else {
                 throw new \Aphreton\APIException(
-                    "API route {$route} is not valid",
+                    'API route ' . $route . ' is not valid',
                     \Aphreton\Models\LogEntry::LOG_LEVEL_WARNING,
-                    "API route {$route} is not exists",
+                    'API route ' . $route . ' is not exists',
                     \Aphreton\APIException::ERROR_TYPE_NOT_FOUND
                 );
             }
         } else {
             throw new \Aphreton\APIException(
-                "API route {$route} is not exists",
+                'API route ' . $route . ' is not exists',
                 \Aphreton\Models\LogEntry::LOG_LEVEL_WARNING,
-                "API route {$route} is not exists",
+                'API route ' . $route . ' is not exists',
                 \Aphreton\APIException::ERROR_TYPE_NOT_FOUND
             );
         }
@@ -354,9 +354,9 @@ class API {
                 $errors = $this->validateJSONSchema($params, $schema);
                 if (!empty($errors)) {
                     throw new \Aphreton\APIException(
-                        "Endpoint data validation error. {$errors}",
+                        'Endpoint data validation error. ' . $errors,
                         \Aphreton\Models\LogEntry::LOG_LEVEL_WARNING,
-                        "Endpoint data validation error. {$errors}"
+                        'Endpoint data validation error. ' . $errors
                     );
                 }
             }
@@ -366,15 +366,15 @@ class API {
                 throw $e;
             } catch (\Exception $e) {
                 throw new \Aphreton\APIException(
-                    "API route {$route} endpoint {$endpoint} error: {$e->getMessage()}",
+                    'API route ' . $route . ' endpoint ' . $endpoint . ' error: ' . $e->getMessage(),
                     \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
                 );
             }
         } else {
             throw new \Aphreton\APIException(
-                "API route {$route} endpoint {$endpoint} not exists",
+                'API route {$route} endpoint ' . $endpoint . ' not exists',
                 \Aphreton\Models\LogEntry::LOG_LEVEL_WARNING,
-                "API route {$route} endpoint {$endpoint} not exists",
+                'API route {$route} endpoint ' . $endpoint . ' not exists',
                 \Aphreton\APIException::ERROR_TYPE_NOT_FOUND
             );
         }
