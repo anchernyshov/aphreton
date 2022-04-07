@@ -48,7 +48,7 @@ class DatabasePool {
      * @param string $user Database user
      * @param string $password Database password
      * 
-     * @throws Exception if database type is not in self::ALLOWED_DATABASE_TYPES
+     * @throws \Aphreton\APIException if database type is not in self::ALLOWED_DATABASE_TYPES
      * 
      * @return void
      */
@@ -61,7 +61,10 @@ class DatabasePool {
                 $this->databases[$name] = new \Aphreton\MongoDBConnection($dsn, $user, $password);
             }
         } else {
-            throw new \Aphreton\APIException('Database type ' . $type . ' is not allowed');
+            throw new \Aphreton\APIException(
+                'Database type ' . $type . ' is not allowed',
+                \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+            );
         }
     }
 
@@ -70,13 +73,16 @@ class DatabasePool {
      * 
      * @param string $name Database name
      * 
-     * @throws Exception if database with given name not exists
+     * @throws \Aphreton\APIException if database with given name not exists
      * 
      * @return \Aphreton\DatabaseConnection
      */
     public function getDatabase($name) {
         if (!array_key_exists($name, $this->databases)) {
-            throw new \Aphreton\APIException('Database ' . $name . ' does not exist');
+            throw new \Aphreton\APIException(
+                'Database ' . $name . ' does not exist',
+                \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+            );
         }
         return $this->databases[$name];
     }
@@ -98,11 +104,14 @@ class DatabasePool {
     /**
      * Prevents the instance from being unserialized
      * 
-     * @throws Exception always
+     * @throws \Aphreton\APIException always
      * 
      * @return void
      */
     public function __wakeup() { 
-        throw new \Aphreton\APIException('Cannot unserialize database pool singleton');
+        throw new \Aphreton\APIException(
+            'Cannot unserialize database pool singleton',
+            \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+        );
     }
 }

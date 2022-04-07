@@ -52,7 +52,11 @@ abstract class Model {
         if (empty($params)) {
             //Empty database search parameters, restrict for now
             //TODO: handle multiple records in search result
-            throw new \Exception('API error');
+            throw new \Aphreton\APIException(
+                'Attempt to perform model search with empty parameters',
+                \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+            );
+            
         }
         
         // get instance of a caller class: DerivedClass::get(...) => new DerivedClass()

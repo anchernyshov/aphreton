@@ -25,7 +25,7 @@ class PDOConnection extends DatabaseConnection {
      * @param string $sql Query string
      * @param array $params Parameters
      * 
-     * @throws \Exception if PDO error occurs
+     * @throws \Aphreton\APIException if PDO error occurs
      * 
      * @return object
      */
@@ -41,7 +41,10 @@ class PDOConnection extends DatabaseConnection {
             $stmt->execute($params);
             return $stmt;
         } catch (\Exception $e) {
-            throw new \Aphreton\APIException($e->getMessage(), 'API database error');
+            throw new \Aphreton\APIException(
+                'PDO connection exception: ' . $e->getMessage(),
+                \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+            );
         }
     }
 
@@ -69,14 +72,17 @@ class PDOConnection extends DatabaseConnection {
      * @param string $source Table name
      * @param array $data Data to insert
      * 
-     * @throws \Exception if $data array is empty
-     * @throws \Exception if query row count equals 0 (no data was inserted)
+     * @throws \Aphreton\APIException if $data array is empty
+     * @throws \Aphreton\APIException if query row count equals 0 (no data was inserted)
      * 
      * @return int Inserted id
      */
     public function insert(string $source, array $data) {
         if (!$data) {
-            throw new \Exception('Cannot create empty record');
+            throw new \Aphreton\APIException(
+                'Attempt to perform PDO record creation with empty data',
+                \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+            );
         }
         $sql = "INSERT INTO {$source} ";
         $keys = array_keys($data);
@@ -88,7 +94,10 @@ class PDOConnection extends DatabaseConnection {
         if ($this->query($sql, $data)->rowCount() > 0) {
             return $this->pdo->lastInsertId();
         } else {
-            throw new \Exception('Database insert error');
+            throw new \Aphreton\APIException(
+                'PDO insert error. Table:' . $source . ', query: ' . $sql,
+                \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+            );
         }
     }
 
@@ -99,7 +108,7 @@ class PDOConnection extends DatabaseConnection {
      * @param array $filter Search parameters
      * @param array $data Data to update
      * 
-     * @throws \Exception if $filter or $data arrays are empty
+     * @throws \Aphreton\APIException if $filter or $data arrays are empty
      * 
      * @return bool Operation status
      */
@@ -123,7 +132,10 @@ class PDOConnection extends DatabaseConnection {
             }
             return ($this->query($sql, $data)->rowCount() > 0);
         } else {
-            throw new \Exception('Cannot update record with given parameters');
+            throw new \Aphreton\APIException(
+                'Attempt to perform PDO record update with empty filter/data',
+                \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+            );
         }
     }
 }

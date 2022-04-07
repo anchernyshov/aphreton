@@ -37,7 +37,7 @@ class MongoDBConnection extends DatabaseConnection {
      * @param array $filter
      * @param array $options
      * 
-     * @throws Exception if MongoDB driver error occurs
+     * @throws \Aphreton\APIException if MongoDB driver error occurs
      * 
      * @return object
      */
@@ -48,7 +48,10 @@ class MongoDBConnection extends DatabaseConnection {
             $cursor = $this->client->executeQuery($source, $query);
             return $cursor;
         } catch (\Exception $e) {
-            throw new \Exception($e->getMessage());
+            throw new \Aphreton\APIException(
+                'MongoDB connection exception: ' . $e->getMessage(),
+                \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+            );
         }
     }
 
@@ -58,7 +61,8 @@ class MongoDBConnection extends DatabaseConnection {
      * @param string $source Formatted string "DATABASE_NAME.COLLECTION_NAME"
      * @param array $data Data to insert
      * 
-     * @throws Exception if MongoDB driver error occurs
+     * @throws \Aphreton\APIException if MongoDB driver error occurs
+     * @throws \Aphreton\APIException if $data is empty
      * 
      * @return \MongoDB\BSON\ObjectId
      */
@@ -71,10 +75,16 @@ class MongoDBConnection extends DatabaseConnection {
                 $this->client->executeBulkWrite($source, $bulk);
                 return $oid;
             } catch (\Exception $e) {
-                throw new \Exception($e->getMessage());
+                throw new \Aphreton\APIException(
+                    'MongoDB connection exception: ' . $e->getMessage(),
+                    \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+                );
             }
         } else {
-            throw new \Exception('Cannot create empty record');
+            throw new \Aphreton\APIException(
+                'Attempt to perform mongodb record creation with empty data',
+                \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+            );
         }
     }
 
@@ -85,7 +95,8 @@ class MongoDBConnection extends DatabaseConnection {
      * @param array $filter Search parameters
      * @param array $data Data to update
      * 
-     * @throws Exception if MongoDB driver error occurs
+     * @throws \Aphreton\APIException if MongoDB driver error occurs
+     * @throws \Aphreton\APIException if $filter or $data is empty
      * 
      * @return \MongoDB\Driver\WriteResult
      */
@@ -98,10 +109,16 @@ class MongoDBConnection extends DatabaseConnection {
                 $result = $this->client->executeBulkWrite($source, $bulk);
                 return $result;
             } catch (\Exception $e) {
-                throw new \Exception($e->getMessage());
+                throw new \Aphreton\APIException(
+                    'MongoDB connection exception: ' . $e->getMessage(),
+                    \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+                );
             }
         } else {
-            throw new \Exception('Cannot update empty record');
+            throw new \Aphreton\APIException(
+                'Attempt to perform mongodb record update with empty filter/data',
+                \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+            );
         }
     }
 }
