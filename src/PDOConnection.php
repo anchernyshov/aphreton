@@ -20,6 +20,20 @@ class PDOConnection extends DatabaseConnection {
     }
 
     /**
+     * Checks database connection
+     * 
+     * @return bool
+     */
+    public function checkConnection() {
+        try {
+            $this->query('SELECT 1', []);
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }   
+    }
+
+    /**
      * Lazy loads and queries the database with given sql string with given parameters
      * 
      * @param string $sql Query string

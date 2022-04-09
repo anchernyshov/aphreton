@@ -63,8 +63,8 @@ class API {
         if (file_exists(self::CONFIG_PATH)) {
             $this->config = include(self::CONFIG_PATH);
         } else {
-            //log database is not initialized here - throw generic exception
-            throw new \Exception('API configuration error');
+            //log database is not initialized here - manually trigger user error
+            trigger_error('API configuration error', E_USER_ERROR);
         }
         $this->initializeAPIFromConfig();
         $this->validateInput();
@@ -217,11 +217,20 @@ class API {
     private function initializeAPIFromConfig() {
         $this->log_enable = $this->getConfigVar('log_enable');
         date_default_timezone_set($this->getConfigVar('timezone'));
+        //Initializing all databases
         foreach ($this->config['databases'] as $name => $database) {
             $dsn = $this->getConfigVar('dsn', $database);
             $user = $this->getConfigVar('user', $database);
             $password = $this->getConfigVar('password', $database);
             \Aphreton\DatabasePool::getInstance()->addDatabase($name, $dsn, $user, $password);
+        }
+        //Log database health check
+        if ($this->log_enable) {
+            $log_database_name = $this->getConfigVar('log_database');
+            if (!\Aphreton\DatabasePool::getInstance()->getDatabase($log_database_name)->checkConnection()) {
+                //log database is not initialized here - manually trigger user error
+                trigger_error('Log database error', E_USER_ERROR);
+            }
         }
     }
 

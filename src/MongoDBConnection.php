@@ -17,17 +17,22 @@ class MongoDBConnection extends DatabaseConnection {
 
     public function __construct(string $dsn, string $username, string $password) {
         parent::__construct($dsn, $username, $password);
+        //Lazy loads database connection
+        $this->client = new \MongoDB\Driver\Manager($this->dsn, ['username' => $this->username, 'password' => $this->password]);
     }
 
     /**
-     * Lazy loads database connection
+     * Checks database connection
      * 
-     * @return void
+     * @return bool
      */
-    private function lazyLoadClient() {
-        if (is_null($this->client)) {
-            $this->client = new \MongoDB\Driver\Manager($this->dsn, ['username' => $this->username, 'password' => $this->password]);
-        }
+    public function checkConnection() {
+        try {
+            $this->client->executeCommand("admin", new \MongoDB\Driver\Command(["listDatabases" => 1]));
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }   
     }
 
     /**
@@ -42,7 +47,6 @@ class MongoDBConnection extends DatabaseConnection {
      * @return object
      */
     public function query(string $source, array $filter, $options = []) {
-        $this->lazyLoadClient();
         try {
             $query = new \MongoDB\Driver\Query($filter, $options);
             $cursor = $this->client->executeQuery($source, $query);
@@ -67,7 +71,6 @@ class MongoDBConnection extends DatabaseConnection {
      * @return \MongoDB\BSON\ObjectId
      */
     public function insert(string $source, array $data) {
-        $this->lazyLoadClient();
         if (!empty($data)) {
             try {
                 $bulk = new \MongoDB\Driver\BulkWrite();
@@ -101,7 +104,6 @@ class MongoDBConnection extends DatabaseConnection {
      * @return \MongoDB\Driver\WriteResult
      */
     public function update(string $source, array $filter, array $data) {
-        $this->lazyLoadClient();
         if (!empty($filter) && !empty($data)) {
             try {
                 $bulk = new \MongoDB\Driver\BulkWrite();
