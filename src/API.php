@@ -36,6 +36,10 @@ class API {
      */
     private bool $log_enable = false;
     /**
+     * @var bool
+     */
+    private bool $log_database_available = false;
+    /**
      * @var string
      */
     private const CONFIG_PATH = 'config/config.php';
@@ -111,10 +115,11 @@ class API {
      * Returns value of configuration file variable with given name
      * 
      * Parameter $base defines offset in the config tree. By default $base point to the root of the config
-     * Triggers an error if request is not valid
      * 
      * @param string $name
      * @param array $base (optional)
+     * 
+     * @throws \Aphreton\APIException if request is not valid
      * 
      * @return array|string
      */
@@ -216,7 +221,6 @@ class API {
      */
     private function initializeAPIFromConfig() {
         $this->log_enable = $this->getConfigVar('log_enable');
-        date_default_timezone_set($this->getConfigVar('timezone'));
         //Initializing all databases
         foreach ($this->config['databases'] as $name => $database) {
             $dsn = $this->getConfigVar('dsn', $database);
@@ -227,11 +231,13 @@ class API {
         //Log database health check
         if ($this->log_enable) {
             $log_database_name = $this->getConfigVar('log_database');
-            if (!\Aphreton\DatabasePool::getInstance()->getDatabase($log_database_name)->checkConnection()) {
+            $this->log_database_available = \Aphreton\DatabasePool::getInstance()->getDatabase($log_database_name)->checkConnection();
+            if (!$this->log_database_available) {
                 //log database is not initialized here - manually trigger user error
                 trigger_error('Log database error', E_USER_ERROR);
             }
         }
+        date_default_timezone_set($this->getConfigVar('timezone'));
     }
 
     /**
@@ -504,7 +510,7 @@ class API {
      * @return void
      */
     private function log(string $message, int $level = null) {
-        if ($this->log_enable) {
+        if ($this->log_enable && $this->log_database_available) {
             \Aphreton\Models\LogEntry::create($message, $level);
         }
     }
