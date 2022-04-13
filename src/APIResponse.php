@@ -5,7 +5,7 @@ namespace Aphreton;
 /**
  * Represents the response from the API
  */
-class APIResponse implements \JsonSerializable {
+class APIResponse {
 
     /**
      * Response status
@@ -105,22 +105,6 @@ class APIResponse implements \JsonSerializable {
     }
 
     /**
-     * Serializes this instance to object
-     * 
-     * @return array
-     */
-    public function jsonSerialize() {
-        return [
-            'status' => $this->status,
-            'route' => $this->route,
-            'endpoint' => $this->endpoint,
-            'data' => $this->data,
-            'error' => $this->error,
-            'execution_time' => $this->execution_time
-        ];
-    }
-
-    /**
      * Returns JSON encoded instance string
      * 
      * This method is designed to be used at the end of the program right before final echo
@@ -130,6 +114,13 @@ class APIResponse implements \JsonSerializable {
      */
     public function toJSON() {
         $this->execution_time += microtime(true);
-        return json_encode($this);
+        return json_encode([
+            'status' => $this->status,
+            'route' => $this->route,
+            'endpoint' => $this->endpoint,
+            'data' => $this->data,
+            'error' => $this->error,
+            'execution_time' => $this->execution_time
+        ]);
     }
 }
