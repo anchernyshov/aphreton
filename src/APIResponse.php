@@ -38,7 +38,7 @@ class APIResponse {
      * 
      * @var array
      */
-    private array $data = array();
+    private array $data = [];
     /**
      * Time of program execution
      * 
@@ -75,12 +75,16 @@ class APIResponse {
     /**
      * Setter for $this->data
      * 
-     * @param array $data
+     * @param ?array $data
      * 
      * @return void
      */
-    public function setData(array $data) {
-        $this->data = $data;
+    public function setData($data) {
+        if (!$data) {
+            $this->data = [];
+        } else {
+            $this->data = $data;
+        }
     }
 
     /**
