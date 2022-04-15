@@ -46,12 +46,11 @@ abstract class Model {
      * 
      * @param array $params
      * 
-     * @return null|object
+     * @return null|object|array
      */
     public static function get($params) {
         if (empty($params)) {
             //Empty database search parameters, restrict for now
-            //TODO: handle multiple records in search result
             throw new \Aphreton\APIException(
                 'Attempt to perform model search with empty parameters',
                 \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
@@ -59,24 +58,34 @@ abstract class Model {
             
         }
         
-        // get instance of a caller class: DerivedClass::get(...) => new DerivedClass()
+        //Get instance of a caller class: DerivedClass::get(...) => new DerivedClass()
         $class = new \ReflectionClass(get_called_class());
         $entity = $class->newInstance();
-        
         $e_source_name = $entity->getSourceName();
         $e_connection = $entity->getConnection();
+        unset($entity);
 
         $records = $e_connection->find($e_source_name, $params);
+        $result = [];
         if (!empty($records)) {
-            $record = $records[0];
-            //Manually set $_id property of base class
-            $entity->_id = $record['_id'];
-            foreach ($class->getProperties(\ReflectionProperty::IS_PUBLIC) as $prop) {
-                if (isset($record[$prop->getName()])) {
-                    $prop->setValue($entity, $record[$prop->getName()]);
+            $total = count($records);
+            for ($i = 0; $i < $total; $i++) {
+                $record = $records[$i];
+                $entity = $class->newInstance();
+                //Manually set $_id property of base class
+                $entity->_id = $record['_id'];
+                foreach ($class->getProperties(\ReflectionProperty::IS_PUBLIC) as $prop) {
+                    if (isset($record[$prop->getName()])) {
+                        $prop->setValue($entity, $record[$prop->getName()]);
+                    }
                 }
+                $result[] = $entity;
             }
-            return $entity;
+            if ($total == 1) {
+                return $result[0];
+            } else {
+                return $result;
+            }
         } else {
             return null;
         }
@@ -105,6 +114,15 @@ abstract class Model {
             //TODO: Unique constraint check
             $this->_id = $this->connection->insert($this->source_name, $data);
         }
+    }
+
+    /**
+     * Getter for $this->_id
+     * 
+     * @return int|\MongoDB\BSON\ObjectId
+     */
+    public function getId() {
+        return $this->_id;
     }
 
     /**
