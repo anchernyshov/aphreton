@@ -11,10 +11,10 @@ class Library extends \Aphreton\APIRoute {
                 'type' => 'object',
                 'properties' => [
                     'book_name' => [
-                        'type' => 'string'
+                        'type' => ['string', 'array']
                     ],
                     'author_name' => [
-                        'type' => 'string'
+                        'type' => ['string', 'array']
                     ]
                 ],
                 'anyOf' => [
@@ -41,14 +41,14 @@ class Library extends \Aphreton\APIRoute {
                 );
             }
             if (is_array($author)) {
-                //TODO: add set support for model search method
-                throw new \Aphreton\APIException(
-                    'Multiple authors with name ' . $params->author_name . ' found in the database',
-                    \Aphreton\Models\LogEntry::LOG_LEVEL_INFO,
-                    'Multiple authors with name ' . $params->author_name . ' found in the database'
-                );
+                $id_list = [];
+                foreach ($author as $key => $value) {
+                    $id_list[] = $value->getId();
+                }
+                $filter['author_id'] = $id_list;
+            } else {
+                $filter['author_id'] = $author->getId();
             }
-            $filter['author_id'] = $author->getId();
         }
         $books = \Aphreton\Models\Book::get($filter);
         if ($books !== null && !is_array($books)) {

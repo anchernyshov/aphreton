@@ -73,11 +73,27 @@ class PDOConnection extends DatabaseConnection {
     public function find($source, $params = null) {
         $sql = 'SELECT * FROM ' . $source;
         $conditions = [];
+        $sql_params = [];
         foreach ($params as $key => $value) {
-            $conditions[] = $key . ' = :' . $key;
+            if (is_array($value)) {
+                //WHERE x IN (:x1, :x2, ...)
+                $tmp = $key . ' IN (';
+                foreach ($value as $inner_key => $inner_value) {
+                    $tmp .= ':' . $key . strval($inner_key) . ',';
+                    $sql_params[$key . strval($inner_key)] = $inner_value;
+                }
+                //remove last comma
+                $tmp = substr($tmp, 0, -1);
+                $tmp .= ')';
+                $conditions[] = $tmp;
+            } else {
+                //WHERE x = :x
+                $conditions[] = $key . ' = :' . $key;
+                $sql_params[$key] = $value;
+            }
         }
         $sql .= ' WHERE ' . implode(' AND ', $conditions);
-        return $this->query($sql, $params)->fetchAll(\PDO::FETCH_ASSOC);
+        return $this->query($sql, $sql_params)->fetchAll(\PDO::FETCH_ASSOC);
     }
 
     /**
