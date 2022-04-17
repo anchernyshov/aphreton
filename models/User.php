@@ -40,6 +40,6 @@ class User extends \Aphreton\Model {
     public function __construct() {
         parent::__construct();
         $this->connection = \Aphreton\DatabasePool::getInstance()->getDatabase('test');
-        $this->source_name = 'USERS';
+        $this->source_name = 'USER';
     }
 }
