@@ -7,7 +7,7 @@ class Library extends \Aphreton\APIRoute {
     public function __construct($parent) {
         parent::__construct($parent);
         $this->setJSONSchemaForEndpoint(
-            'get', [
+            'get_book', [
                 'type' => 'object',
                 'properties' => [
                     'book_name' => [
@@ -23,10 +23,22 @@ class Library extends \Aphreton\APIRoute {
                 ]
             ]
         );
-        $this->setRequiredUserLevelForEndpoint('get', 1);
+        $this->setRequiredUserLevelForEndpoint('get_book', 1);
+        $this->setJSONSchemaForEndpoint(
+            'add_author', [
+                'type' => 'object',
+                'properties' => [
+                    'name' => [
+                        'type' => 'string'
+                    ]
+                ],
+                'required' => ['name']
+            ]
+        );
+        $this->setRequiredUserLevelForEndpoint('add_author', 1);
     }
 
-    public function get($params) {
+    public function get_book($params) {
         $filter = [];
         if (property_exists($params, 'book_name')) {
             $filter['name'] = $params->book_name;
@@ -55,5 +67,12 @@ class Library extends \Aphreton\APIRoute {
             $books = [$books];
         }
         return $books;
+    }
+
+    public function add_author($params) {
+        $author = new \Aphreton\Models\Author();
+        $author->name = $params->name;
+        $author->save();
+        return $author->toArray();
     }
 }

@@ -117,6 +117,22 @@ abstract class Model {
     }
 
     /**
+     * Converts all public class properties and _id property to associative array
+     * 
+     * @return array
+     */
+    public function toArray() {
+        $result = [];
+        $result['_id'] = $this->_id;
+        $reflection = new \ReflectionObject($this);
+        $properties = $reflection->getProperties(\ReflectionProperty::IS_PUBLIC);
+        foreach ($properties as $prop) {
+            $result[$prop->getName()] = $prop->getValue($this);
+        }
+        return $result;
+    }
+
+    /**
      * Getter for $this->_id
      * 
      * @return int|\MongoDB\BSON\ObjectId
