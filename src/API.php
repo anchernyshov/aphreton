@@ -317,7 +317,7 @@ class API {
                 \Aphreton\APIException::ERROR_TYPE_AUTH
             );
         }
-        $this->user = \Aphreton\Models\User::get(['login' => $token_payload['login']]);
+        $this->user = \Aphreton\Models\User::getOne(['login' => $token_payload['login']], true);
     }
 
     /**

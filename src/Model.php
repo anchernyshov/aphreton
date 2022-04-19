@@ -39,14 +39,17 @@ abstract class Model {
     public function __construct() { }
 
     /**
-     * Queries database and returns constructed derived class instance with found data
+     * Queries database and returns array of constructed derived class instances with found data
      * 
      * Example:
-     * TestModel $x = TestModel::get(['test' => '123']);
+     * $x = TestModel::get(['test' => '123']);
+     * echo $x[0]->getId();
      * 
      * @param array $params
      * 
-     * @return null|object|array
+     * @throws \Aphreton\APIException when $params == null
+     * 
+     * @return null|array
      */
     public static function get($params) {
         if (empty($params)) {
@@ -81,14 +84,40 @@ abstract class Model {
                 }
                 $result[] = $entity;
             }
-            if ($total == 1) {
-                return $result[0];
-            } else {
-                return $result;
-            }
+            return $result;
         } else {
             return null;
         }
+    }
+
+    /**
+     * Queries database and returns one constructed derived class instance with found data
+     * When more than one database record is found and parameter $strict equals true, throws an exception
+     * 
+     * Example:
+     * $x = TestModel::get(['test' => '123']);
+     * echo $x->getId();
+     * 
+     * @param array $params
+     * @param bool $strict (optional)
+     * 
+     * @throws \Aphreton\APIException when $strict == true and more than one database record is found
+     * 
+     * @return null|object
+     */
+    public static function getOne($params, $strict = false) {
+        //TODO: SELECT query with LIMIT 1
+        $data = self::get($params);
+        if (!$data) {
+            return null;
+        }
+        if ($strict && count($data) > 1) {
+            throw new \Aphreton\APIException(
+                'Method getOne of Model class returned more than one result',
+                \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+            );
+        }
+        return $data[0];
     }
 
     /**

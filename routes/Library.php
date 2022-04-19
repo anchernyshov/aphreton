@@ -52,20 +52,13 @@ class Library extends \Aphreton\APIRoute {
                     'Author with name ' . $params->author_name . ' does not exist'
                 );
             }
-            if (is_array($author)) {
-                $id_list = [];
-                foreach ($author as $key => $value) {
-                    $id_list[] = $value->getId();
-                }
-                $filter['author_id'] = $id_list;
-            } else {
-                $filter['author_id'] = $author->getId();
+            $id_list = [];
+            foreach ($author as $key => $value) {
+                $id_list[] = $value->getId();
             }
+            $filter['author_id'] = $id_list;
         }
         $books = \Aphreton\Models\Book::get($filter);
-        if ($books !== null && !is_array($books)) {
-            $books = [$books];
-        }
         return $books;
     }
 

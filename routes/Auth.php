@@ -39,7 +39,7 @@ class Auth extends \Aphreton\APIRoute {
     public function login($params) {
         $result = [];
         $client_ip = $this->parent->getClientIPAddress();
-        $user = \Aphreton\Models\User::get(['login' => $params->login]);
+        $user = \Aphreton\Models\User::getOne(['login' => $params->login], true);
         if ($user) {
             $pepper = $this->parent->getConfigVar('password_pepper');
             if (password_verify(hash_hmac("sha512", $params->password, $pepper), $user->password)) {
@@ -72,7 +72,7 @@ class Auth extends \Aphreton\APIRoute {
 
     public function register($params) {
         $result = [];
-        $user = \Aphreton\Models\User::get(['login' => $params->login]);
+        $user = \Aphreton\Models\User::getOne(['login' => $params->login]);
         if (!$user) {
             $user = new \Aphreton\Models\User();
             $user->login = $params->login;
