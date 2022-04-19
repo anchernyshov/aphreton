@@ -387,9 +387,9 @@ class API {
             }
         } else {
             throw new \Aphreton\APIException(
-                'API route {$route} endpoint ' . $endpoint . ' not exists',
+                'API route ' . $route .' endpoint ' . $endpoint . ' is not exists',
                 \Aphreton\Models\LogEntry::LOG_LEVEL_WARNING,
-                'API route {$route} endpoint ' . $endpoint . ' not exists',
+                'API route ' . $route .' endpoint ' . $endpoint . ' is not exists',
                 \Aphreton\APIException::ERROR_TYPE_NOT_FOUND
             );
         }
