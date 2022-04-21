@@ -70,7 +70,7 @@ class PDOConnection extends DatabaseConnection {
      * 
      * @return null|array
      */
-    public function find($source, $params = null) {
+    public function find($source, $params = null, $order_by = null, $limit = null, $offset = null) {
         $sql = 'SELECT * FROM ' . $source;
         $conditions = [];
         $sql_params = [];
@@ -93,6 +93,18 @@ class PDOConnection extends DatabaseConnection {
             }
         }
         $sql .= ' WHERE ' . implode(' AND ', $conditions);
+        if ($order_by) {
+            $sql .= ' ORDER BY :order_by';
+            $sql_params['order_by'] = $order_by;
+        }
+        if ($limit) {
+            $sql .= ' LIMIT :limit';
+            $sql_params['limit'] = $limit;
+        }
+        if ($offset && $order_by) {
+            $sql .= ' OFFSET :offset';
+            $sql_params['offset'] = $offset;
+        }
         return $this->query($sql, $sql_params)->fetchAll(\PDO::FETCH_ASSOC);
     }
 

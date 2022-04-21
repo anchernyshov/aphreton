@@ -51,7 +51,7 @@ abstract class Model {
      * 
      * @return null|array
      */
-    public static function get($params) {
+    public static function get($params, $order_by = null, $limit = null, $offset = null) {
         if (empty($params)) {
             //Empty database search parameters, restrict for now
             throw new \Aphreton\APIException(
@@ -68,7 +68,7 @@ abstract class Model {
         $e_connection = $entity->getConnection();
         unset($entity);
 
-        $records = $e_connection->find($e_source_name, $params);
+        $records = $e_connection->find($e_source_name, $params, $order_by, $limit, $offset);
         $result = [];
         if (!empty($records)) {
             $total = count($records);
@@ -91,31 +91,16 @@ abstract class Model {
     }
 
     /**
-     * Queries database and returns one constructed derived class instance with found data
-     * When more than one database record is found and parameter $strict equals true, throws an exception
-     * 
-     * Example:
-     * $x = TestModel::get(['test' => '123']);
-     * echo $x->getId();
+     * Alias for Model::get method with $order_by = null, $limit = 1 and $offset = null
      * 
      * @param array $params
-     * @param bool $strict (optional)
-     * 
-     * @throws \Aphreton\APIException when $strict == true and more than one database record is found
      * 
      * @return null|object
      */
-    public static function getOne($params, $strict = false) {
-        //TODO: SELECT query with LIMIT 1
-        $data = self::get($params);
+    public static function getOne($params) {
+        $data = self::get($params, null, 1, null);
         if (!$data) {
             return null;
-        }
-        if ($strict && count($data) > 1) {
-            throw new \Aphreton\APIException(
-                'Method getOne of Model class returned more than one result',
-                \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
-            );
         }
         return $data[0];
     }
