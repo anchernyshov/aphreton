@@ -12,13 +12,13 @@ class GenericAPITest extends \PHPUnit\Framework\TestCase {
 
     private function errorResponseCheck($response, $error_code, $error = null) {
         $this->assertEquals($error_code, $response->getStatusCode());
-        $data = json_decode($response->getBody()->getContents());
+        $body = json_decode($response->getBody(), true);
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new \Exception('Malformed response JSON');
         }
-        $this->assertEquals(0, $data->status);
+        $this->assertEquals(0, $body['status']);
         if ($error) {
-            $this->assertEquals($error, $data->error);
+            $this->assertEquals($error, $body['error']);
         }
     }
 	
