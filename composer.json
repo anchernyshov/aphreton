@@ -17,7 +17,8 @@
         "psr-4": {
             "Aphreton\\": "src/",
             "Aphreton\\Models\\": "models/",
-			"Aphreton\\Routes\\": "routes/"
+            "Aphreton\\Routes\\": "routes/",
+            "Aphreton\\Tests\\": "tests/"
         }
     },
     "require-dev": {

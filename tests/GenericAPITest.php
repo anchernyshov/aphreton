@@ -1,26 +1,10 @@
 <?php
 
+namespace Aphreton\Tests;
+
 require_once("../vendor/autoload.php");
 
-class GenericAPITest extends \PHPUnit\Framework\TestCase {
-
-    private $client;
-
-    public function setUp(): void {
-        $this->client = new \GuzzleHttp\Client();
-    }
-
-    private function errorResponseCheck($response, $error_code, $error = null) {
-        $this->assertEquals($error_code, $response->getStatusCode());
-        $body = json_decode($response->getBody(), true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new \Exception('Malformed response JSON');
-        }
-        $this->assertEquals(0, $body['status']);
-        if ($error) {
-            $this->assertEquals($error, $body['error']);
-        }
-    }
+class GenericAPITest extends HTTPAPITestBase {
 	
     public function testGet() {
         $response = $this->client->request('GET', 'http://localhost/', [
