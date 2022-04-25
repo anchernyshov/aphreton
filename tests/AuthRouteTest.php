@@ -19,62 +19,27 @@ class AuthRouteTest extends HTTPAPITestBase {
     ];
 	
     public function testLoginJSONSchemaValidation1() {
-        $response = $this->client->request('POST', 'http://localhost/', [
-            'headers' => [
-                'Host' => 'localhost',
-                'Content-Type' => 'application/json'
-            ],
-            'http_errors' => false,
-            'body' => '{"route": "auth", "endpoint": "login"}'
-        ]);
+        $response = $this->APIRequest('auth', 'login');
         $this->errorResponseCheck($response, 500, 'Endpoint data validation error. NULL value found, but an object is required');
     }
 
     public function testLoginJSONSchemaValidation2() {
-        $response = $this->client->request('POST', 'http://localhost/', [
-            'headers' => [
-                'Host' => 'localhost',
-                'Content-Type' => 'application/json'
-            ],
-            'http_errors' => false,
-            'body' => '{"route": "auth", "endpoint": "login", "params": {}}'
-        ]);
+        $response = $this->APIRequest('auth', 'login', []);
         $this->errorResponseCheck($response, 500, 'Endpoint data validation error. [login] The property login is required; [password] The property password is required');
     }
 
     public function testLoginJSONSchemaValidation3() {
-        $response = $this->client->request('POST', 'http://localhost/', [
-            'headers' => [
-                'Host' => 'localhost',
-                'Content-Type' => 'application/json'
-            ],
-            'http_errors' => false,
-            'body' => '{"route": "auth", "endpoint": "login", "params": {"login": 1, "password": 1}}'
-        ]);
+        $response = $this->APIRequest('auth', 'login', ['login' => 1, 'password' => 1]);
         $this->errorResponseCheck($response, 500, 'Endpoint data validation error. [login] Integer value found, but a string is required; [password] Integer value found, but a string is required');
     }
 
     public function testLoginWithIncorrectUserData() {
-        $response = $this->client->request('POST', 'http://localhost/', [
-            'headers' => [
-                'Host' => 'localhost',
-                'Content-Type' => 'application/json'
-            ],
-            'http_errors' => false,
-            'body' => '{"route": "auth", "endpoint": "login", "params": {"login": "notexists", "password": "123123"}}'
-        ]);
+        $response = $this->APIRequest('auth', 'login', ['login' => 'notexists', 'password' => '123123']);
         $this->errorResponseCheck($response, 401, 'Incorrect username or password');
     }
 
     public function testLoginWithCorrectUserData() {
-        $response = $this->client->request('POST', 'http://localhost/', [
-            'headers' => [
-                'Host' => 'localhost',
-                'Content-Type' => 'application/json'
-            ],
-            'http_errors' => false,
-            'body' => '{"route": "auth", "endpoint": "login", "params": {"login": "test", "password": "qwerty"}}'
-        ]);
+        $response = $this->APIRequest('auth', 'login', ['login' => 'test', 'password' => 'qwerty']);
         $this->successResponseCheck($response, $this->response_schemas['login']);
         
         $body = json_decode($response->getBody(), true);

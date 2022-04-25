@@ -21,6 +21,25 @@ class HTTPAPITestBase extends \PHPUnit\Framework\TestCase {
         }
     }
 
+    protected function APIRequest(string $route, string $endpoint, array $data = null, bool $use_token = false) {
+        $params_block = '';
+        if ($data !== null) {
+            $params_block = ', "params": ' . json_encode($data,  JSON_FORCE_OBJECT);
+        }
+        $headers = [
+            'Host' => 'localhost',
+            'Content-Type' => 'application/json'
+        ];
+        if ($use_token === true) {
+            $headers['Authorization'] = 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dpbiI6InRlc3QiLCJpcCI6Ijo6MSIsImV4cCI6NDgwNDI1OTgwNC42OTQxMzh9.lWFYSdANlbGEQJo-aw7PzNKI71Hac1tPw09O4Ijfcg0';
+        }
+        return $this->client->request('POST', 'http://localhost/', [
+            'headers' => $headers,
+            'http_errors' => false,
+            'body' => '{"route": "' . $route . '", "endpoint": "' . $endpoint . '"' . $params_block . '}'
+        ]);
+    }
+
     protected function getConfigVar(string $name, array $base = null) {
         if (!$base) {
             $base = $this->config;

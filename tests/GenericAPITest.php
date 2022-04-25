@@ -100,28 +100,12 @@ class GenericAPITest extends HTTPAPITestBase {
     }
 
     public function testRequestUnknownRoute() {
-        $response = $this->client->request('POST', 'http://localhost/', [
-            'headers' => [
-                'Host' => 'localhost',
-                'Content-Type' => 'application/json',
-                'Authorization' => 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dpbiI6InRlc3QiLCJpcCI6Ijo6MSIsImV4cCI6NDgwNDI1OTgwNC42OTQxMzh9.lWFYSdANlbGEQJo-aw7PzNKI71Hac1tPw09O4Ijfcg0'
-            ],
-            'http_errors' => false,
-            'body' => '{"route": "gggggg", "endpoint": "gggggg"}'
-        ]);
+        $response = $this->APIRequest('gggggg', 'gggggg', null, true);
         $this->errorResponseCheck($response, 404, 'API route gggggg is not exists');
     }
 
     public function testRequestUnknownEndpoint() {
-        $response = $this->client->request('POST', 'http://localhost/', [
-            'headers' => [
-                'Host' => 'localhost',
-                'Content-Type' => 'application/json',
-                'Authorization' => 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dpbiI6InRlc3QiLCJpcCI6Ijo6MSIsImV4cCI6NDgwNDI1OTgwNC42OTQxMzh9.lWFYSdANlbGEQJo-aw7PzNKI71Hac1tPw09O4Ijfcg0'
-            ],
-            'http_errors' => false,
-            'body' => '{"route": "auth", "endpoint": "gggggg"}'
-        ]);
+        $response = $this->APIRequest('auth', 'gggggg', null, true);
         $this->errorResponseCheck($response, 404, 'API route auth endpoint gggggg is not exists');
     }
 }
