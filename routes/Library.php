@@ -36,6 +36,30 @@ class Library extends \Aphreton\APIRoute {
             ]
         );
         $this->setRequiredUserLevelForEndpoint('add_author', 1);
+        $this->setJSONSchemaForEndpoint(
+            'add_book', [
+                'type' => 'object',
+                'properties' => [
+                    'name' => [
+                        'type' => 'string'
+                    ],
+                    'price' => [
+                        'type' => 'integer'
+                    ],
+                    'author_name' => [
+                        'type' => 'string'
+                    ],
+                    'author_id' => [
+                        'type' => 'integer'
+                    ]
+                ],
+                'oneOf' => [
+                    ["required" => ['name', 'price', "author_name"]],
+                    ["required" => ['name', 'price', "author_id"]]
+                ]
+            ]
+        );
+        $this->setRequiredUserLevelForEndpoint('add_book', 1);
     }
 
     public function get_book($params) {
@@ -67,5 +91,34 @@ class Library extends \Aphreton\APIRoute {
         $author->name = $params->name;
         $author->save();
         return $author->toArray();
+    }
+
+    public function add_book($params) {
+        $book = new \Aphreton\Models\Book();
+        $book->name = $params->name;
+        $book->price = $params->price;
+        if (property_exists($params, 'author_id')) {
+            $author = \Aphreton\Models\Author::getOne(['_id' => $params->author_id]);
+            if (!$author) {
+                throw new \Aphreton\APIException(
+                    'Author with id ' . $params->author_id . ' does not exist',
+                    \Aphreton\Models\LogEntry::LOG_LEVEL_INFO,
+                    'Author with id ' . $params->author_id . ' does not exist'
+                );
+            }
+            $book->author_id = $params->author_id;
+        } else if (property_exists($params, 'author_name')) {
+            $author = \Aphreton\Models\Author::getOne(['name' => $params->author_name]);
+            if (!$author) {
+                throw new \Aphreton\APIException(
+                    'Author with name ' . $params->author_name . ' does not exist',
+                    \Aphreton\Models\LogEntry::LOG_LEVEL_INFO,
+                    'Author with name ' . $params->author_name . ' does not exist'
+                );
+            }
+            $book->author_id = $author->getId();
+        }
+        $book->save();
+        return $book->toArray();
     }
 }
