@@ -58,7 +58,6 @@ abstract class Model {
                 'Attempt to perform model search with empty parameters',
                 \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
             );
-            
         }
         
         //Get instance of a caller class: DerivedClass::get(...) => new DerivedClass()
@@ -127,6 +126,21 @@ abstract class Model {
             //Inserting data and updating id field
             //TODO: Unique constraint check
             $this->_id = $this->connection->insert($this->source_name, $data);
+        }
+    }
+
+    /**
+     * Deletes current object from the database
+     * 
+     * @return void
+     */
+    public function delete() {
+        if (!$this->connection->delete($this->source_name, ['_id' => $this->_id])) {
+            //Deletion error
+            throw new \Aphreton\APIException(
+                'Model deletion error',
+                \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+            );
         }
     }
 

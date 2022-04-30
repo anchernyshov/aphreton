@@ -60,6 +60,18 @@ class Library extends \Aphreton\APIRoute {
             ]
         );
         $this->setRequiredUserLevelForEndpoint('add_book', 1);
+        $this->setJSONSchemaForEndpoint(
+            'delete_book', [
+                'type' => 'object',
+                'properties' => [
+                    'id' => [
+                        'type' => 'integer'
+                    ]
+                ],
+                'required' => ['id']
+            ]
+        );
+        $this->setRequiredUserLevelForEndpoint('delete_book', 1);
     }
 
     public function get_book($params) {
@@ -120,5 +132,18 @@ class Library extends \Aphreton\APIRoute {
         }
         $book->save();
         return $book->toArray();
+    }
+
+    public function delete_book($params) {
+        $book = \Aphreton\Models\Book::getOne(['_id' => $params->id]);
+        if (!$book) {
+            throw new \Aphreton\APIException(
+                'Book with id ' . $params->id . ' does not exist',
+                \Aphreton\Models\LogEntry::LOG_LEVEL_INFO,
+                'Book with id ' . $params->id . ' does not exist'
+            );
+        }
+        $book->delete();
+        return null;
     }
 }

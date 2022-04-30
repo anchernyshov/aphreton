@@ -177,4 +177,36 @@ class PDOConnection extends DatabaseConnection {
             );
         }
     }
+
+    /**
+     * Deletes record in the database table
+     * 
+     * @param string $source Table name
+     * @param array $filter Search parameters
+     * 
+     * @throws \Aphreton\APIException if $filter array is empty
+     * 
+     * @return bool Operation status
+     */
+    public function delete(string $source, array $filter) {
+        if (!empty($filter)) {
+            $sql = 'DELETE FROM ' . $source;
+            $conditions = [];
+            foreach ($filter as $key => $value) {
+                $conditions[] = $key . ' = :' . $key;
+            }
+
+            $sql .= ' WHERE ' . implode(' AND ', $conditions);
+            //Manually adding $_id field value to PDO prepared statement arguments
+            if (array_key_exists('_id', $filter)) {
+                $data['_id'] = $filter['_id'];
+            }
+            return ($this->query($sql, $data)->rowCount() > 0);
+        } else {
+            throw new \Aphreton\APIException(
+                'Attempt to perform PDO record deletion with empty filter',
+                \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+            );
+        }
+    }
 }
