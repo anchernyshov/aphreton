@@ -127,12 +127,9 @@ class PDOConnection extends DatabaseConnection {
             );
         }
         $sql = "INSERT INTO {$source} ";
-        $keys = array_keys($data);
-        $values = [];
-        foreach ($data as $key => $value) {
-            $values[] = ':' . $key;
-        }
-        $sql .= '(' . implode(',', $keys) . ') VALUES (' . implode(',', $values) . ')';
+        $data_keys = array_keys($data);
+        $data_prefixed_keys = preg_filter('/^/', ':', $data_keys);
+        $sql .= '(' . implode(',', $data_keys) . ') VALUES (' . implode(',', $data_prefixed_keys) . ')';
         if ($this->query($sql, $data)->rowCount() > 0) {
             return $this->pdo->lastInsertId();
         } else {
