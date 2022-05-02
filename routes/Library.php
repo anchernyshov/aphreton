@@ -6,6 +6,50 @@ class Library extends \Aphreton\APIRoute {
 
     public function __construct($parent) {
         parent::__construct($parent);
+
+        //get_author
+        $this->setJSONSchemaForEndpoint(
+            'get_author', [
+                'type' => 'object',
+                'properties' => [
+                    'name' => [
+                        'type' => ['string', 'array']
+                    ]
+                ],
+                'required' => ['name']
+            ]
+        );
+        $this->setRequiredUserLevelForEndpoint('get_author', 1);
+
+        //add_author
+        $this->setJSONSchemaForEndpoint(
+            'add_author', [
+                'type' => 'object',
+                'properties' => [
+                    'name' => [
+                        'type' => 'string'
+                    ]
+                ],
+                'required' => ['name']
+            ]
+        );
+        $this->setRequiredUserLevelForEndpoint('add_author', 1);
+
+        //delete_author
+        $this->setJSONSchemaForEndpoint(
+            'delete_author', [
+                'type' => 'object',
+                'properties' => [
+                    'id' => [
+                        'type' => 'integer'
+                    ]
+                ],
+                'required' => ['id']
+            ]
+        );
+        $this->setRequiredUserLevelForEndpoint('delete_author', 1);
+
+        //get_book
         $this->setJSONSchemaForEndpoint(
             'get_book', [
                 'type' => 'object',
@@ -24,18 +68,8 @@ class Library extends \Aphreton\APIRoute {
             ]
         );
         $this->setRequiredUserLevelForEndpoint('get_book', 1);
-        $this->setJSONSchemaForEndpoint(
-            'add_author', [
-                'type' => 'object',
-                'properties' => [
-                    'name' => [
-                        'type' => 'string'
-                    ]
-                ],
-                'required' => ['name']
-            ]
-        );
-        $this->setRequiredUserLevelForEndpoint('add_author', 1);
+
+        //add_book
         $this->setJSONSchemaForEndpoint(
             'add_book', [
                 'type' => 'object',
@@ -60,6 +94,8 @@ class Library extends \Aphreton\APIRoute {
             ]
         );
         $this->setRequiredUserLevelForEndpoint('add_book', 1);
+
+        //delete_book
         $this->setJSONSchemaForEndpoint(
             'delete_book', [
                 'type' => 'object',
@@ -72,6 +108,38 @@ class Library extends \Aphreton\APIRoute {
             ]
         );
         $this->setRequiredUserLevelForEndpoint('delete_book', 1);
+    }
+
+    public function get_author($params) {
+        $author = \Aphreton\Models\Author::get(['name' => $params->name]);
+        if (!$author) {
+            throw new \Aphreton\APIException(
+                'Author with name ' . $params->name . ' does not exist',
+                \Aphreton\Models\LogEntry::LOG_LEVEL_INFO,
+                'Author with name ' . $params->name . ' does not exist'
+            );
+        }
+        return $author;
+    }
+
+    public function add_author($params) {
+        $author = new \Aphreton\Models\Author();
+        $author->name = $params->name;
+        $author->save();
+        return $author->toArray();
+    }
+
+    public function delete_author($params) {
+        $author = \Aphreton\Models\Author::getOne(['_id' => $params->id]);
+        if (!$author) {
+            throw new \Aphreton\APIException(
+                'Author with id ' . $params->id . ' does not exist',
+                \Aphreton\Models\LogEntry::LOG_LEVEL_INFO,
+                'Author with id ' . $params->id . ' does not exist'
+            );
+        }
+        $author->delete();
+        return null;
     }
 
     public function get_book($params) {
@@ -96,13 +164,6 @@ class Library extends \Aphreton\APIRoute {
         }
         $books = \Aphreton\Models\Book::get($filter);
         return $books;
-    }
-
-    public function add_author($params) {
-        $author = new \Aphreton\Models\Author();
-        $author->name = $params->name;
-        $author->save();
-        return $author->toArray();
     }
 
     public function add_book($params) {
