@@ -459,6 +459,8 @@ class API {
             case E_CORE_WARNING:
             case E_COMPILE_WARNING:
             case E_PARSE:
+            case E_DEPRECATED:
+            case E_USER_DEPRECATED:
                 $this->response->setError(\Aphreton\APIException::DEFAULT_API_ERROR_MESSAGE);
                 break;
             case E_USER_ERROR:
