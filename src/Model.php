@@ -121,11 +121,11 @@ abstract class Model {
         }
         if (isset($this->_id)) {
              //If $_id field is set, database record exists => update
-            $this->connection->update($this->source_name, ['_id' => $this->_id], $data);
+            $this->connection->update(['_id' => $this->_id], $data, $this->source_name);
         } else {
             //Inserting data and updating id field
             //TODO: Unique constraint check
-            $this->_id = $this->connection->insert($this->source_name, $data);
+            $this->_id = $this->connection->insert($data, $this->source_name);
         }
     }
 
@@ -135,7 +135,7 @@ abstract class Model {
      * @return void
      */
     public function delete() {
-        if (!$this->connection->delete($this->source_name, ['_id' => $this->_id])) {
+        if (!$this->connection->delete(['_id' => $this->_id], $this->source_name)) {
             //Deletion error
             throw new \Aphreton\APIException(
                 'Model deletion error',

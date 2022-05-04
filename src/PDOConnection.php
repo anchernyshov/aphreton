@@ -34,16 +34,16 @@ class PDOConnection extends DatabaseConnection {
     }
 
     /**
-     * Lazy loads and queries the database with given sql string with given parameters
+     * Lazy loads and queries the database with given sql filter string with given parameters
      * 
-     * @param string $sql Query string
-     * @param array $params Parameters
+     * @param string $filter SQL query string
+     * @param array $options Parameters
      * 
      * @throws \Aphreton\APIException if PDO error occurs
      * 
      * @return object
      */
-    public function query(string $sql, $params = null) {
+    public function query(string $filter, array $options = null, string $source = null) {
         if (is_null($this->pdo)) {
             $this->pdo = new \PDO($this->dsn, $this->username, $this->password);
             $this->pdo->setAttribute( \PDO::ATTR_EMULATE_PREPARES, false );
@@ -51,8 +51,8 @@ class PDOConnection extends DatabaseConnection {
             $this->pdo->setAttribute( \PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC ); 
         }
         try {
-            $stmt = $this->pdo->prepare($sql); 
-            $stmt->execute($params);
+            $stmt = $this->pdo->prepare($filter); 
+            $stmt->execute($options);
             return $stmt;
         } catch (\Exception $e) {
             throw new \Aphreton\APIException(
@@ -67,6 +67,9 @@ class PDOConnection extends DatabaseConnection {
      * 
      * @param string $source Table name
      * @param array $params Search parameters
+     * @param string $order_by
+     * @param integer $limit
+     * @param integer $offset
      * 
      * @return null|array
      */
@@ -119,7 +122,7 @@ class PDOConnection extends DatabaseConnection {
      * 
      * @return int Inserted id
      */
-    public function insert(string $source, array $data) {
+    public function insert(array $data, string $source) {
         if (!$data) {
             throw new \Aphreton\APIException(
                 'Attempt to perform PDO record creation with empty data',
@@ -151,7 +154,7 @@ class PDOConnection extends DatabaseConnection {
      * 
      * @return bool Operation status
      */
-    public function update(string $source, array $filter, array $data) {
+    public function update(array $filter, array $data, string $source) {
         if (!empty($filter) && !empty($data)) {
             $sql = 'UPDATE ' . $source . ' SET ';
 
@@ -188,7 +191,7 @@ class PDOConnection extends DatabaseConnection {
      * 
      * @return bool Operation status
      */
-    public function delete(string $source, array $filter) {
+    public function delete(array $filter, string $source) {
         if (!empty($filter)) {
             $sql = 'DELETE FROM ' . $source;
             $conditions = [];

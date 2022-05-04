@@ -38,17 +38,28 @@ class MongoDBConnection extends DatabaseConnection {
     /**
      * Queries the database with given filter and options
      * 
-     * @param string $source Formatted string "DATABASE_NAME.COLLECTION_NAME"
-     * @param array $filter
+     * @param string $filter JSON string containing filter array
      * @param array $options
+     * @param string $source Formatted string "DATABASE_NAME.COLLECTION_NAME"
      * 
+     * @throws \Aphreton\APIException if filter string contains invalid JSON
      * @throws \Aphreton\APIException if MongoDB driver error occurs
      * 
      * @return object
      */
-    public function query(string $source, array $filter, $options = []) {
+    public function query(string $filter, array $options, string $source) {
         try {
-            $query = new \MongoDB\Driver\Query($filter, $options);
+            $filter_array = json_decode($filter, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new \Aphreton\APIException(
+                    'Malformed filter JSON',
+                    \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+                );
+            }
+            if (!$options) {
+                $options = [];
+            }
+            $query = new \MongoDB\Driver\Query($filter_array, $options);
             $cursor = $this->client->executeQuery($source, $query);
             return $cursor;
         } catch (\Exception $e) {
@@ -62,15 +73,15 @@ class MongoDBConnection extends DatabaseConnection {
     /**
      * Inserts new entry into database collection with given name
      * 
-     * @param string $source Formatted string "DATABASE_NAME.COLLECTION_NAME"
      * @param array $data Data to insert
+     * @param string $source Formatted string "DATABASE_NAME.COLLECTION_NAME"
      * 
      * @throws \Aphreton\APIException if MongoDB driver error occurs
      * @throws \Aphreton\APIException if $data is empty
      * 
      * @return \MongoDB\BSON\ObjectId
      */
-    public function insert(string $source, array $data) {
+    public function insert(array $data, string $source) {
         if (!empty($data)) {
             try {
                 $bulk = new \MongoDB\Driver\BulkWrite();
@@ -94,16 +105,16 @@ class MongoDBConnection extends DatabaseConnection {
     /**
      * Updates a database entry with given data
      * 
-     * @param string $source Formatted string "DATABASE_NAME.COLLECTION_NAME"
      * @param array $filter Search parameters
      * @param array $data Data to update
+     * @param string $source Formatted string "DATABASE_NAME.COLLECTION_NAME"
      * 
      * @throws \Aphreton\APIException if MongoDB driver error occurs
      * @throws \Aphreton\APIException if $filter or $data is empty
      * 
      * @return \MongoDB\Driver\WriteResult
      */
-    public function update(string $source, array $filter, array $data) {
+    public function update(array $filter, array $data, string $source) {
         if (!empty($filter) && !empty($data)) {
             try {
                 $bulk = new \MongoDB\Driver\BulkWrite();

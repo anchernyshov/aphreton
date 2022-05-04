@@ -31,9 +31,11 @@ abstract class DatabaseConnection {
 
     public function checkConnection() { }
 
-    public function insert(string $source, array $data) { }
+    public function query(string $filter, array $options, string $source) { }
 
-    public function update(string $source, array $filter, array $data) { }
+    public function insert(array $data, string $source) { }
 
-    public function delete(string $source, array $filter) { }
+    public function update(array $filter, array $data, string $source) { }
+
+    public function delete(array $filter, string $source) { }
 }
