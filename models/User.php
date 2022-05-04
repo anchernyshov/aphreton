@@ -26,20 +26,9 @@ class User extends \Aphreton\Model {
      */
     public $last_logined = null;
 
-    /* TODO: Main database preparation on first launch
-        CREATE TABLE "USERS" (
-            "_id" INTEGER NOT NULL UNIQUE,
-            "login" TEXT NOT NULL UNIQUE,
-            "password" TEXT NOT NULL,
-            "level" INTEGER NOT NULL DEFAULT 0,
-            "last_logined" TEXT,
-            PRIMARY KEY("id" AUTOINCREMENT)
-        );
-    */
-
     public function __construct() {
         parent::__construct();
-        $this->connection = \Aphreton\DatabasePool::getInstance()->getDatabase('test');
+        $this->connection = \Aphreton\DatabasePool::getInstance()->getDatabase('main');
         $this->source_name = 'USER';
     }
 }

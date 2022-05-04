@@ -238,6 +238,49 @@ class API {
             }
         }
         date_default_timezone_set($this->getConfigVar('timezone'));
+
+        // Main API database reset and initialization
+        if ($this->getConfigVar('initialize_database')) {
+            $db = \Aphreton\DatabasePool::getInstance()->getDatabase('main');
+
+            //!!! Full database reset !!!
+            $db->query("PRAGMA writable_schema = 1;", [], "");
+            $db->query("DELETE FROM sqlite_master;", [], "");
+            $db->query("PRAGMA writable_schema = 0;", [], "");
+            $db->query("VACUUM;", [], "");
+            $db->query("PRAGMA integrity_check;", [], "");
+
+            $db->query(
+                "CREATE TABLE IF NOT EXISTS \"USER\" (
+                    \"_id\" INTEGER PRIMARY KEY AUTOINCREMENT,
+                    \"login\" TEXT NOT NULL UNIQUE,
+                    \"password\" TEXT NOT NULL,
+                    \"level\" INTEGER NOT NULL DEFAULT 0,
+                    \"last_logined\" TEXT
+                );", [], ""
+            );
+            $user = new \Aphreton\Models\User();
+            $user->login = 'test';
+            $pepper = $this->getConfigVar('password_pepper');
+            $peppered_password = hash_hmac("sha512", 'qwerty', $pepper);
+            $user->password = password_hash($peppered_password, PASSWORD_BCRYPT, ['cost' => 11]);
+            $user->save();
+
+            $db->query(
+                "CREATE TABLE IF NOT EXISTS \"AUTHOR\" (
+                    \"_id\" INTEGER PRIMARY KEY AUTOINCREMENT,
+                    \"name\" TEXT NOT NULL
+                );", [], ""
+            );
+            $db->query(
+                "CREATE TABLE IF NOT EXISTS \"BOOK\" (
+                    \"_id\" INTEGER PRIMARY KEY AUTOINCREMENT,
+                    \"name\" TEXT NOT NULL,
+                    \"author_id\" INTEGER NOT NULL,
+                    \"price\" INTEGER NOT NULL
+                );", [], ""
+            );
+        }
     }
 
     /**

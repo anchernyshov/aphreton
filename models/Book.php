@@ -22,19 +22,9 @@ class Book extends \Aphreton\Model {
      */
     public $price = 0;
 
-    /*
-        CREATE TABLE "BOOK" (
-            "_id" INTEGER NOT NULL UNIQUE,
-            "name" TEXT NOT NULL,
-            "author_id" INTEGER NOT NULL,
-            "price" INTEGER NOT NULL,
-            PRIMARY KEY("_id" AUTOINCREMENT)
-        );
-    */
-
     public function __construct() {
         parent::__construct();
-        $this->connection = \Aphreton\DatabasePool::getInstance()->getDatabase('test');
+        $this->connection = \Aphreton\DatabasePool::getInstance()->getDatabase('main');
         $this->source_name = 'BOOK';
     }
 }
