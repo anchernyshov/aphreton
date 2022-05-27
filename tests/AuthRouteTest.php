@@ -8,7 +8,7 @@ class AuthRouteTest extends HTTPAPITestBase {
 
     private $response_schemas = [
         'login' => [
-            'type' => 'array',
+            'type' => 'object',
             'properties' => [
                 'token' => [
                     'type' => 'string'

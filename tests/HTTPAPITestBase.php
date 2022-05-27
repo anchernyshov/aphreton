@@ -64,14 +64,14 @@ class HTTPAPITestBase extends \PHPUnit\Framework\TestCase {
 
     protected function successResponseCheck($response, $schema = null) {
         $this->assertEquals(200, $response->getStatusCode());
-        $body = json_decode($response->getBody(), true);
+        $body = json_decode($response->getBody(), false);
         $response->getBody()->seek(0);
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new \Exception('Malformed response JSON');
         }
-        $this->assertEquals(1, $body['status']);
+        $this->assertEquals(1, $body->status);
         if ($schema) {
-            $this->json_validator->validate($body['data'], $schema, \JsonSchema\Constraints\Constraint::CHECK_MODE_NORMAL);
+            $this->json_validator->validate($body->data, $schema, \JsonSchema\Constraints\Constraint::CHECK_MODE_NORMAL);
             $errstr = '';
             if (!$this->json_validator->isValid()) {
                 $number_of_errors = count($this->json_validator->getErrors());
