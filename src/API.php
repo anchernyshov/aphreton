@@ -137,6 +137,16 @@ class API {
     }
 
     /**
+     * Saves updated configuration file stored in $this->getConfigVar
+     * 
+     * @return null
+     */
+    public function saveConfig() {
+        $altered_config = '<?php ' . PHP_EOL . 'return ' . $this->varexport($this->config, true) . ';';
+        file_put_contents(self::CONFIG_PATH, $altered_config);
+    }
+
+    /**
      * Getter for $this->user
      * 
      * @return \Aphreton\Models\User
@@ -241,6 +251,10 @@ class API {
 
         // Main API database reset and initialization
         if ($this->getConfigVar('initialize_database')) {
+            
+            $this->config['initialize_database'] = false;
+            $this->saveConfig();
+
             $db = \Aphreton\DatabasePool::getInstance()->getDatabase('main');
 
             //!!! Full database reset !!!
@@ -559,5 +573,22 @@ class API {
         if ($this->log_enable && $this->log_database_available) {
             \Aphreton\Models\LogEntry::create($message, $level);
         }
+    }
+
+    /**
+     * var_export() with square brackets and indented 4 spaces
+     * 
+     * From php.net:
+     * https://www.php.net/manual/ru/function.var-export.php#122853
+     * 
+     * @return string
+     */
+    private function varexport($expression, $return=FALSE) {
+        $export = var_export($expression, TRUE);
+        $export = preg_replace("/^([ ]*)(.*)/m", '$1$1$2', $export);
+        $array = preg_split("/\r\n|\n|\r/", $export);
+        $array = preg_replace(["/\s*array\s\($/", "/\)(,)?$/", "/\s=>\s$/"], [NULL, ']$1', ' => ['], $array);
+        $export = join(PHP_EOL, array_filter(["["] + $array));
+        if ((bool)$return) return $export; else echo $export;
     }
 }
