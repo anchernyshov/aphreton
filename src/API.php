@@ -261,6 +261,7 @@ class API {
             );
             $user = new \Aphreton\Models\User();
             $user->login = 'test';
+            $user->level = 1;
             $pepper = $this->getConfigVar('password_pepper');
             $peppered_password = hash_hmac("sha512", 'qwerty', $pepper);
             $user->password = password_hash($peppered_password, PASSWORD_BCRYPT, ['cost' => 11]);
