@@ -8,14 +8,6 @@ namespace Aphreton;
 class APIResponse {
 
     /**
-     * Response status
-     * 
-     * $this->status = 1 if no errors detected, 0 otherwise
-     * 
-     * @var int
-     */
-    public int $status = 1;
-    /**
      * Requested API route
      * 
      * @var string
@@ -88,24 +80,14 @@ class APIResponse {
     }
 
     /**
-     * Sets response error status with given error string
+     * Sets response error string
      * 
      * @param string $error
      * 
      * @return void
      */
     public function setError(string $error) {
-        $this->status = 0;
         $this->error = $error;
-    }
-
-    /**
-     * Checks if response has error status
-     * 
-     * @return bool
-     */
-    public function hasError() {
-        return !(bool)$this->status;
     }
 
     /**
@@ -119,7 +101,6 @@ class APIResponse {
     public function toJSON() {
         $this->execution_time += microtime(true);
         return json_encode([
-            'status' => $this->status,
             'route' => $this->route,
             'endpoint' => $this->endpoint,
             'data' => $this->data,

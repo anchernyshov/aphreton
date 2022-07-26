@@ -56,7 +56,6 @@ class HTTPAPITestBase extends \PHPUnit\Framework\TestCase {
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new \Exception('Malformed response JSON');
         }
-        $this->assertEquals(0, $body['status']);
         if ($error) {
             $this->assertEquals($error, $body['error']);
         }
@@ -69,7 +68,6 @@ class HTTPAPITestBase extends \PHPUnit\Framework\TestCase {
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new \Exception('Malformed response JSON');
         }
-        $this->assertEquals(1, $body->status);
         if ($schema) {
             $this->json_validator->validate($body->data, $schema, \JsonSchema\Constraints\Constraint::CHECK_MODE_NORMAL);
             $errstr = '';
