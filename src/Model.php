@@ -54,9 +54,9 @@ abstract class Model {
     public static function get($params, $order_by = null, $limit = null, $offset = null) {
         if (empty($params)) {
             //Empty database search parameters, restrict for now
-            throw new \Aphreton\APIException(
+            throw new APIException(
                 'Attempt to perform model search with empty parameters',
-                \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+                Models\LogEntry::LOG_LEVEL_ERROR
             );
         }
         
@@ -137,9 +137,9 @@ abstract class Model {
     public function delete() {
         if (!$this->connection->delete(['_id' => $this->_id], $this->source_name)) {
             //Deletion error
-            throw new \Aphreton\APIException(
+            throw new APIException(
                 'Model deletion error',
-                \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+                Models\LogEntry::LOG_LEVEL_ERROR
             );
         }
     }

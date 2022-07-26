@@ -51,9 +51,9 @@ class MongoDBConnection extends DatabaseConnection {
         try {
             $filter_array = json_decode($filter, true);
             if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new \Aphreton\APIException(
+                throw new APIException(
                     'Malformed filter JSON',
-                    \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+                    Models\LogEntry::LOG_LEVEL_ERROR
                 );
             }
             if (!$options) {
@@ -63,9 +63,9 @@ class MongoDBConnection extends DatabaseConnection {
             $cursor = $this->client->executeQuery($source, $query);
             return $cursor;
         } catch (\Exception $e) {
-            throw new \Aphreton\APIException(
+            throw new APIException(
                 'MongoDB connection exception: ' . $e->getMessage(),
-                \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+                Models\LogEntry::LOG_LEVEL_ERROR
             );
         }
     }
@@ -89,15 +89,15 @@ class MongoDBConnection extends DatabaseConnection {
                 $this->client->executeBulkWrite($source, $bulk);
                 return $oid;
             } catch (\Exception $e) {
-                throw new \Aphreton\APIException(
+                throw new APIException(
                     'MongoDB connection exception: ' . $e->getMessage(),
-                    \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+                    Models\LogEntry::LOG_LEVEL_ERROR
                 );
             }
         } else {
-            throw new \Aphreton\APIException(
+            throw new APIException(
                 'Attempt to perform mongodb record creation with empty data',
-                \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+                Models\LogEntry::LOG_LEVEL_ERROR
             );
         }
     }
@@ -122,15 +122,15 @@ class MongoDBConnection extends DatabaseConnection {
                 $result = $this->client->executeBulkWrite($source, $bulk);
                 return $result;
             } catch (\Exception $e) {
-                throw new \Aphreton\APIException(
+                throw new APIException(
                     'MongoDB connection exception: ' . $e->getMessage(),
-                    \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+                    Models\LogEntry::LOG_LEVEL_ERROR
                 );
             }
         } else {
-            throw new \Aphreton\APIException(
+            throw new APIException(
                 'Attempt to perform mongodb record update with empty filter/data',
-                \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+                Models\LogEntry::LOG_LEVEL_ERROR
             );
         }
     }

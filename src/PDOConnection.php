@@ -55,9 +55,9 @@ class PDOConnection extends DatabaseConnection {
             $stmt->execute($options);
             return $stmt;
         } catch (\Exception $e) {
-            throw new \Aphreton\APIException(
+            throw new APIException(
                 'PDO connection exception: ' . $e->getMessage(),
-                \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+                Models\LogEntry::LOG_LEVEL_ERROR
             );
         }
     }
@@ -124,9 +124,9 @@ class PDOConnection extends DatabaseConnection {
      */
     public function insert(array $data, string $source) {
         if (!$data) {
-            throw new \Aphreton\APIException(
+            throw new APIException(
                 'Attempt to perform PDO record creation with empty data',
-                \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+                Models\LogEntry::LOG_LEVEL_ERROR
             );
         }
         $sql = "INSERT INTO {$source} ";
@@ -136,9 +136,9 @@ class PDOConnection extends DatabaseConnection {
         if ($this->query($sql, $data)->rowCount() > 0) {
             return $this->pdo->lastInsertId();
         } else {
-            throw new \Aphreton\APIException(
+            throw new APIException(
                 'PDO insert error. Table:' . $source . ', query: ' . $sql,
-                \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+                Models\LogEntry::LOG_LEVEL_ERROR
             );
         }
     }
@@ -174,9 +174,9 @@ class PDOConnection extends DatabaseConnection {
             }
             return ($this->query($sql, $data)->rowCount() > 0);
         } else {
-            throw new \Aphreton\APIException(
+            throw new APIException(
                 'Attempt to perform PDO record update with empty filter/data',
-                \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+                Models\LogEntry::LOG_LEVEL_ERROR
             );
         }
     }
@@ -206,9 +206,9 @@ class PDOConnection extends DatabaseConnection {
             }
             return ($this->query($sql, $data)->rowCount() > 0);
         } else {
-            throw new \Aphreton\APIException(
+            throw new APIException(
                 'Attempt to perform PDO record deletion with empty filter',
-                \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+                Models\LogEntry::LOG_LEVEL_ERROR
             );
         }
     }

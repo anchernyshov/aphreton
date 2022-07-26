@@ -49,7 +49,7 @@ class APIException extends \Exception {
      */
     public function __construct($log_message, $log_level = null, $user_message = null, $code = null, \Throwable $previous = null) {
         if (!$log_level) {
-            $log_level = \Aphreton\Models\LogEntry::LOG_LEVEL_INFO;
+            $log_level = Models\LogEntry::LOG_LEVEL_INFO;
         }
         if (!$user_message) {
             $user_message = 'API Error';

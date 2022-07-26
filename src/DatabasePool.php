@@ -56,14 +56,14 @@ class DatabasePool {
         $type = explode(':', $dsn)[0];
         if (in_array($type, self::ALLOWED_DATABASE_TYPES)) {
             if ($type === 'sqlite') {
-                $this->databases[$name] = new \Aphreton\PDOConnection($dsn, $user, $password);
+                $this->databases[$name] = new PDOConnection($dsn, $user, $password);
             } else if ($type === 'mongodb') {
-                $this->databases[$name] = new \Aphreton\MongoDBConnection($dsn, $user, $password);
+                $this->databases[$name] = new MongoDBConnection($dsn, $user, $password);
             }
         } else {
-            throw new \Aphreton\APIException(
+            throw new APIException(
                 'Database type ' . $type . ' is not allowed',
-                \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+                Models\LogEntry::LOG_LEVEL_ERROR
             );
         }
     }
@@ -79,9 +79,9 @@ class DatabasePool {
      */
     public function getDatabase($name) {
         if (!array_key_exists($name, $this->databases)) {
-            throw new \Aphreton\APIException(
+            throw new APIException(
                 'Database ' . $name . ' does not exist',
-                \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+                Models\LogEntry::LOG_LEVEL_ERROR
             );
         }
         return $this->databases[$name];
@@ -109,9 +109,9 @@ class DatabasePool {
      * @return void
      */
     public function __wakeup() { 
-        throw new \Aphreton\APIException(
+        throw new APIException(
             'Cannot unserialize database pool singleton',
-            \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR
+            Models\LogEntry::LOG_LEVEL_ERROR
         );
     }
 }

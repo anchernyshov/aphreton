@@ -101,11 +101,11 @@ class GenericAPITest extends HTTPAPITestBase {
 
     public function testRequestUnknownRoute() {
         $response = $this->APIRequest('gggggg', 'gggggg', null, true);
-        $this->errorResponseCheck($response, 404, 'API route gggggg is not exists');
+        $this->errorResponseCheck($response, 404, 'API route gggggg does not exist');
     }
 
     public function testRequestUnknownEndpoint() {
         $response = $this->APIRequest('auth', 'gggggg', null, true);
-        $this->errorResponseCheck($response, 404, 'API route auth endpoint gggggg is not exists');
+        $this->errorResponseCheck($response, 404, 'API route auth endpoint gggggg does not exist');
     }
 }
