@@ -64,12 +64,12 @@ class LibraryRouteTest extends HTTPAPITestBase {
                         'enum' => ['Test Book']
                     ],
                     'author_id' => [
-                        'type' => 'string',
-                        'enum' => ['1']
+                        'type' => 'integer',
+                        'enum' => [1]
                     ],
                     'price' => [
-                        'type' => 'string',
-                        'enum' => ['100']
+                        'type' => 'integer',
+                        'enum' => [100]
                     ]
                 ],
                 'required' => ['name', 'author_id', 'price']

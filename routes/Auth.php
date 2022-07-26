@@ -38,7 +38,7 @@ class Auth extends \Aphreton\APIRoute {
 
     public function login($params) {
         $result = [];
-        $client_ip = $this->parent->getClientIPAddress();
+        $client_ip = $this->parent->getUser()->getIPAddress();
         $user = \Aphreton\Models\User::getOne(['login' => $params->login]);
         if ($user) {
             $pepper = $this->parent->getConfigVar('password_pepper');
@@ -50,7 +50,7 @@ class Auth extends \Aphreton\APIRoute {
                     'ip' => $client_ip,
                     'exp' => microtime(true) + $this->parent->getConfigVar('jwt_valid_duration')
                 ];
-                $result['token'] = $this->parent->encodeTokenPayload($payload);
+                $result['token'] = $this->parent->getUser()->encodeTokenPayload($payload);
             } else {
                 throw new \Aphreton\APIException(
                     'Attempt to authenticate with invalid password for user ' . $params->login,

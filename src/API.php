@@ -16,7 +16,7 @@ class API {
      */
     private $request;
     /**
-     * @var \Aphreton\Models\User
+     * @var \Aphreton\APIUser
      */
     private $user;
     /**
@@ -72,6 +72,8 @@ class API {
         }
         $this->initializeAPIFromConfig();
         $this->validateInput();
+
+        $this->user = new \Aphreton\APIUser($this->getConfigVar('jwt_key'));
         
         $input_data = $this->request->getData();
         $route = $input_data->route;
@@ -80,21 +82,6 @@ class API {
         
         $this->response->setRoute($route);
         $this->response->setEndpoint($endpoint);
-        
-        $token = $this->getBearerToken();
-        if (!$token) {
-            if ( (strcasecmp($route, 'auth') != 0) || (strcasecmp($endpoint, 'login') != 0) ) {
-                //TODO: temporarily ban user without token after X attempts
-                throw new \Aphreton\APIException(
-                    'Endpoint access attempt without authentication token',
-                    \Aphreton\Models\LogEntry::LOG_LEVEL_WARNING,
-                    'No authentication token provided',
-                    \Aphreton\APIException::ERROR_TYPE_AUTH
-                );
-            }
-        } else {
-            $this->authenticate($token);
-        }
 
         $this->process($route, $endpoint, $params);
         $this->out();
@@ -149,19 +136,10 @@ class API {
     /**
      * Getter for $this->user
      * 
-     * @return \Aphreton\Models\User
+     * @return \Aphreton\APIUser
      */
     public function getUser() {
         return $this->user;
-    }
-
-    /**
-     * Returns filtered client IP address
-     * 
-     * @return string
-     */
-    public function getClientIPAddress() {
-        return filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP);
     }
 
     /**
@@ -184,44 +162,6 @@ class API {
             }
         }
         return $errstr;
-    }
-
-    /**
-     * Decodes given JWT with the key from configuration file
-     * 
-     * @param string $token
-     * 
-     * @return object
-     */
-    public function decodeToken($token) {
-        try {
-            return \Firebase\JWT\JWT::decode($token, new \Firebase\JWT\Key($this->config['jwt_key'], 'HS256'), 'HS256');
-        } catch (\Firebase\JWT\ExpiredException $e) {
-            throw new \Aphreton\APIException(
-                'Attempt to authenticate with expired token',
-                \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR,
-                'Authentication token expired',
-                \Aphreton\APIException::ERROR_TYPE_AUTH
-            );
-        } catch (\Exception $e) {
-            throw new \Aphreton\APIException(
-                'Authentication token error: ' . $e->getMessage(),
-                \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR,
-                'Authentication token error',
-                \Aphreton\APIException::ERROR_TYPE_AUTH
-            );
-        }
-    }
-
-    /**
-     * Encodes given object into JWT with the key from configuration file
-     * 
-     * @param object|array $payload
-     * 
-     * @return string
-     */
-    public function encodeTokenPayload($payload) {
-        return \Firebase\JWT\JWT::encode($payload, $this->config['jwt_key'], 'HS256');
     }
 
     /**
@@ -327,7 +267,7 @@ class API {
             );
         }
         $input = file_get_contents('php://input');
-        filter_var($input, FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
+        //filter_var($input, FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
         if (!$input) {
             throw new \Aphreton\APIException(
                 'Empty request body',
@@ -353,29 +293,6 @@ class API {
                 'Request validation error. ' . $errors
             );
         }
-    }
-
-    /**
-     * Checks if given JWT is valid
-     * 
-     * Triggers an error if JWT is not valid
-     * 
-     * @param string $token
-     * 
-     * @return void
-     */
-    private function authenticate($token) {
-        $token_payload = (array) $this->decodeToken($token);
-        $client_ip = $this->getClientIPAddress();
-        if (strcasecmp($token_payload['ip'], $client_ip) != 0) {
-            throw new \Aphreton\APIException(
-                'Client IP address mismatch. IP address from token: ' . $token_payload['ip'],
-                \Aphreton\Models\LogEntry::LOG_LEVEL_ERROR,
-                'Authentication token error',
-                \Aphreton\APIException::ERROR_TYPE_AUTH
-            );
-        }
-        $this->user = \Aphreton\Models\User::getOne(['login' => $token_payload['login']]);
     }
 
     /**
@@ -414,13 +331,27 @@ class API {
         
         if ($class && method_exists($class, $endpoint)) {
             $required_level = $class->getRequiredUserLevelForEndpoint($endpoint);
-            if ($this->user && $this->user->level < $required_level) {
-                throw new \Aphreton\APIException(
-                    "User authorization error for endpoint {$route}.{$endpoint} (level required: {$required_level}, user level: {$this->user->level})",
-                    \Aphreton\Models\LogEntry::LOG_LEVEL_WARNING,
-                    'Authorization error',
-                    \Aphreton\APIException::ERROR_TYPE_AUTH
-                );
+            if ($required_level > 0) {
+                $token = $this->getBearerToken();
+                if (!$token) {
+                    //TODO: temporarily ban user without token after X attempts
+                    throw new \Aphreton\APIException(
+                        'Endpoint access attempt without authentication token',
+                        \Aphreton\Models\LogEntry::LOG_LEVEL_WARNING,
+                        'No authentication token provided',
+                        \Aphreton\APIException::ERROR_TYPE_AUTH
+                    );
+                } else {
+                    $this->user->loadFromJWT($token);
+                }
+                if ($this->user->isAuthenticated() && $this->user->getModel()->level < $required_level) {
+                    throw new \Aphreton\APIException(
+                        "User authorization error for endpoint {$route}.{$endpoint} (level required: {$required_level}, user level: {$this->user->level})",
+                        \Aphreton\Models\LogEntry::LOG_LEVEL_WARNING,
+                        'Authorization error',
+                        \Aphreton\APIException::ERROR_TYPE_AUTH
+                    );
+                }
             }
             $schema = $class->getJSONSchemaForEndpoint($endpoint);
             if ($schema) {

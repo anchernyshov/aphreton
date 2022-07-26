@@ -68,7 +68,7 @@ class GenericAPITest extends HTTPAPITestBase {
                 'Content-Type' => 'application/json'
             ],
             'http_errors' => false,
-            'body' => '{"route": "gggggg", "endpoint": "gggggg"}'
+            'body' => '{"route": "library", "endpoint": "get_author"}'
         ]);
         $this->errorResponseCheck($response, 401, 'No authentication token provided');
     }
@@ -81,7 +81,7 @@ class GenericAPITest extends HTTPAPITestBase {
                 'Authorization' => 'Bearer GGGGGGGG'
             ],
             'http_errors' => false,
-            'body' => '{"route": "gggggg", "endpoint": "gggggg"}'
+            'body' => '{"route": "library", "endpoint": "get_author"}'
         ]);
         $this->errorResponseCheck($response, 401, 'Authentication token error');
     }
@@ -94,7 +94,7 @@ class GenericAPITest extends HTTPAPITestBase {
                 'Authorization' => 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dpbiI6InRlc3QxIiwiaXAiOiI6OjEiLCJleHAiOjE2NTA2NTkzODAuMjY3NTU2fQ.GoJC22OotXVM3xXqGsV3By5LTvVjWrxt2PEI9XKk_Kk'
             ],
             'http_errors' => false,
-            'body' => '{"route": "gggggg", "endpoint": "gggggg"}'
+            'body' => '{"route": "library", "endpoint": "get_author"}'
         ]);
         $this->errorResponseCheck($response, 401, 'Authentication token expired');
     }
