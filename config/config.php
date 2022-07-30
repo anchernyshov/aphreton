@@ -2,7 +2,8 @@
 return [
     'timezone' => 'Europe/Moscow',
     'jwt_key' => 'example-key',
-    'jwt_valid_duration' => 60,
+    'jwt_valid_duration' => 60 * 15,
+    'refresh_token_valid_duration' => 60 * 60 * 24,
     'password_pepper' => 'a2pAdls3m62KW3d',
     'log_enable' => false,
     'log_database' => 'logs',

@@ -25,6 +25,10 @@ class User extends \Aphreton\Model {
      * @var ?string
      */
     public $last_logined = null;
+        /**
+     * @var ?string
+     */
+    public $refresh_token = null;
 
     public function __construct() {
         parent::__construct();
