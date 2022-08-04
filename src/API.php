@@ -172,10 +172,11 @@ class API {
     private function initializeAPIFromConfig() {
         $this->log_enable = $this->getConfigVar('log_enable');
         //Initializing all databases
-        foreach ($this->config['databases'] as $name => $database) {
-            $dsn = $this->getConfigVar('dsn', $database);
-            $user = $this->getConfigVar('user', $database);
-            $password = $this->getConfigVar('password', $database);
+        $databases = $this->getConfigVar('databases');
+        foreach ($databases as $name => $item) {
+            $dsn = $this->getConfigVar('dsn', $item);
+            $user = $this->getConfigVar('user', $item);
+            $password = $this->getConfigVar('password', $item);
             DatabasePool::getInstance()->addDatabase($name, $dsn, $user, $password);
         }
         //Log database health check
